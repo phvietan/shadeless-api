@@ -1,0 +1,13 @@
+version: "3.9"
+services:
+  shadeless-db:
+    container_name: shadeless-db
+    image: postgres:13.3-alpine
+    environment:
+      POSTGRES_DB: shadeless
+      POSTGRES_USER: shadeless
+      POSTGRES_PASSWORD: 47a3eac22b4cc684a7a1f96bc6e68c6f
+    ports:
+      - "5432:5432"
+    volumes:
+      - "./db/data/:/var/lib/postgresql/data/"
