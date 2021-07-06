@@ -1,45 +1,28 @@
 package main
 
 import (
-	"log"
-	"net/http"
-	"os"
+	"shadeless-api/main/burp"
 	"shadeless-api/main/config"
-	"time"
+	"shadeless-api/main/projects"
 
-	"github.com/gorilla/mux"
+	"github.com/gin-gonic/gin"
 )
 
-func homeHandler(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Health check ok"))
+func healthCheckHandler(c *gin.Context) {
+	c.String(200, "Health check ok")
 }
 
-// func fileServerHandler(w http.ResponseWriter, r *http.Request) {
-// 	ruri := r.RequestURI
-// 	if tFile.MatchString(ruri) {
-// 		w.Header().Set("Content-Type", "text/plain")
-// 	}
-// 	fileserver.ServeHTTP(w, r)
-// }
-
 func main() {
-	// Create folder for serve static files
-	dir := "files"
-	_ = os.Mkdir(dir, 0755)
+	router := gin.Default()
+	router.GET("/healthcheck", healthCheckHandler)
 
-	r := mux.NewRouter()
-	r.HandleFunc("/", homeHandler)
-	r.PathPrefix("/files/").Handler(
-		http.StripPrefix("/files/", http.FileServer(http.Dir(dir))),
-	)
-	http.Handle("/", r)
+	router.Use(setHeaderOctetStream())
+	router.Static("/files", "./files")
 
-	srv := &http.Server{
-		Handler:      r,
-		Addr:         config.GetInstance().GetBindAddress(),
-		WriteTimeout: 15 * time.Second,
-		ReadTimeout:  15 * time.Second,
-	}
-	log.Fatal(srv.ListenAndServe())
+	router.Use(setHeaderForApi())
+	router.Use(handleOptionsMethod())
+
+	burp.Routes(router)
+	projects.Routes(router)
+	router.Run(config.GetInstance().GetBindAddress()) // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }

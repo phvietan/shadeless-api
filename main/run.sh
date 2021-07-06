@@ -12,4 +12,4 @@ sudo docker-compose stop
 sudo docker-compose up -d --build
 cd main
 
-reflex -s -R vendor. -r \.go$ -- go run ./server.go
+reflex -s -R vendor. -r \.go$ -- bash start.sh
