@@ -6,6 +6,7 @@ import (
 
 	"github.com/kamva/mgm/v3"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
@@ -41,18 +42,56 @@ func CreateProject(project *Project) error {
 }
 
 func GetProjects() []Project {
-	ctx := mgm.Ctx()
 	findOptions := options.Find()
 	findOptions.SetSort(bson.D{{"updated_at", -1}})
 
+	results := []Project{}
 	coll := mgm.Coll(&Project{})
-	cursor, err := coll.Find(ctx, bson.M{}, findOptions)
+	err := coll.SimpleFind(&results, bson.M{}, findOptions)
 	if err != nil {
 		fmt.Println(err.Error())
 		return []Project{}
 	}
-
-	results := []Project{}
-	cursor.All(ctx, &results)
 	return results
+}
+
+func GetOneProject(id primitive.ObjectID) *Project {
+	return nil
+}
+
+func UpdateProject(id primitive.ObjectID, project *Project) error {
+	ctx := mgm.Ctx()
+
+	updated := bson.M{}
+	if project.Name != "" {
+		updated["name"] = project.Name
+	}
+	if project.Description != "" {
+		updated["description"] = project.Description
+	}
+	if project.Status != "" {
+		updated["status"] = project.Status
+	}
+
+	coll := mgm.Coll(&Project{})
+	_, err := coll.UpdateByID(ctx, id, bson.D{
+		{"$set", updated},
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func DeleteProject(id primitive.ObjectID) error {
+	ctx := mgm.Ctx()
+
+	coll := mgm.Coll(&Project{})
+	_, err := coll.DeleteOne(ctx, bson.M{"_id": id})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
