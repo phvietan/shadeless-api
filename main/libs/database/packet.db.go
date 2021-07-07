@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/kamva/mgm/v3"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 type Packet struct {
@@ -53,4 +54,45 @@ func CreatePacket(packet *Packet) error {
 		fmt.Println(err)
 	}
 	return nil
+}
+
+func arrayInterfaceToArrayString(arr []interface{}) []string {
+	result := make([]string, len(arr))
+	for i, v := range arr {
+		result[i] = fmt.Sprint(v)
+	}
+	return result
+}
+
+func getDistinc(name string, filterOptions bson.M) []string {
+	ctx := mgm.Ctx()
+
+	coll := mgm.Coll(&Packet{})
+	results, err := coll.Distinct(ctx, name, filterOptions)
+	if err != nil {
+		fmt.Errorf("%v", err)
+		return []string{}
+	}
+	return arrayInterfaceToArrayString(results)
+}
+
+func GetOrigins(projectName string) []string {
+	filterOptions := bson.M{
+		"project": projectName,
+	}
+	return getDistinc("origin", filterOptions)
+}
+
+func GetParameters(projectName string) []string {
+	filterOptions := bson.M{
+		"project": projectName,
+	}
+	return getDistinc("parameters", filterOptions)
+}
+
+func GetReflectedParameters(projectName string) []string {
+	filterOptions := bson.M{
+		"project": projectName,
+	}
+	return getDistinc("reflectedParameters", filterOptions)
 }

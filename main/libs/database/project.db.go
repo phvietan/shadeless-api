@@ -55,8 +55,24 @@ func GetProjects() []Project {
 	return results
 }
 
-func GetOneProject(id primitive.ObjectID) *Project {
-	return nil
+func GetOneProjectById(id primitive.ObjectID) *Project {
+	project := &Project{}
+	err := mgm.Coll(project).FindByID(id, project)
+	if err != nil {
+		fmt.Errorf("%v", err)
+		return nil
+	}
+	return project
+}
+
+func GetOneProjectByName(name string) *Project {
+	project := &Project{}
+	err := mgm.Coll(project).First(bson.M{"name": name}, project)
+	if err != nil {
+		fmt.Errorf("%v", err)
+		return nil
+	}
+	return project
 }
 
 func UpdateProject(id primitive.ObjectID, project *Project) error {

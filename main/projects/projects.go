@@ -16,6 +16,7 @@ func Routes(route *gin.Engine) {
 		projects.PUT("/:id", putProjects)
 		projects.DELETE("/:id", deleteProjects)
 	}
+	ProjectPacketRoutes(route)
 }
 
 func getProjects(c *gin.Context) {
