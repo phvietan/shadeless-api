@@ -3,6 +3,8 @@ package database
 import (
 	"errors"
 	"fmt"
+	"log"
+	"shadeless-api/main/libs/finder"
 
 	"github.com/kamva/mgm/v3"
 	"go.mongodb.org/mongo-driver/bson"
@@ -95,4 +97,55 @@ func GetReflectedParameters(projectName string) []string {
 		"project": projectName,
 	}
 	return getDistinc("reflectedParameters", filterOptions)
+}
+
+type numPackets struct {
+	result struct {
+		Length int `json:"$numberInt" bson:"$numberInt"`
+	}
+}
+
+func GetNumPacketsByOrigin(projectName string, origin string) int32 {
+	pipeline := []bson.M{
+		bson.M{"$match": bson.M{"origin": origin, "project": projectName}},
+		bson.M{"$group": bson.M{"_id": "$path"}},
+		bson.M{"$count": "result"},
+	}
+
+	ctx := mgm.Ctx()
+	cursor, err := mgm.Coll(&Packet{}).Aggregate(ctx, pipeline)
+	if err != nil {
+		fmt.Println(err)
+		return 0
+	}
+	var allDocs []bson.M
+	if err = cursor.All(ctx, &allDocs); err != nil {
+		log.Fatal(err)
+		return 0
+	}
+	return allDocs[0]["result"].(int32)
+}
+
+func GetPacketsByOriginAndProject(projectName string, origin string, options *finder.FinderOptions) []Packet {
+	pipeline := []bson.M{
+		bson.M{"$match": bson.M{"origin": origin, "project": projectName}},
+		bson.M{"$group": bson.M{"_id": "$path", "doc": bson.M{"$last": "$$ROOT"}}},
+		bson.M{"$replaceRoot": bson.M{"newRoot": "$doc"}},
+		bson.M{"$skip": options.Skip},
+		bson.M{"$limit": options.Limit},
+	}
+
+	ctx := mgm.Ctx()
+	cursor, err := mgm.Coll(&Packet{}).Aggregate(ctx, pipeline)
+	if err != nil {
+		fmt.Errorf("%v", err)
+		return []Packet{}
+	}
+	results := []Packet{}
+	err = cursor.All(ctx, &results)
+	if err != nil {
+		fmt.Errorf("%v", err)
+		return []Packet{}
+	}
+	return results
 }

@@ -2,6 +2,7 @@ package projects
 
 import (
 	"shadeless-api/main/libs/database"
+	"shadeless-api/main/libs/finder"
 	"shadeless-api/main/libs/responser"
 
 	"github.com/gin-gonic/gin"
@@ -25,6 +26,8 @@ func ProjectPacketRoutes(route *gin.Engine) {
 	projects := route.Group("/projects/:projectName")
 	{
 		projects.GET("/metadata", getProjectMetadata)
+		projects.GET("/packets", getPacketsByOrigin)
+		projects.GET("/numberPackets", getNumPacketsByOrigin)
 	}
 }
 
@@ -38,6 +41,24 @@ func getProjectMetadata(c *gin.Context) {
 	responser.ResponseOk(c, metaData)
 }
 
-func getParameters(c *gin.Context) {
+func getNumPacketsByOrigin(c *gin.Context) {
+	projectName := c.Param("projectName")
+	origin := c.Query("origin")
+	numPackets := database.GetNumPacketsByOrigin(projectName, origin)
+	responser.ResponseOk(c, numPackets)
+}
 
+func getPacketsByOrigin(c *gin.Context) {
+	projectName := c.Param("projectName")
+	origin := c.Query("origin")
+
+	options := finder.NewFinderOptions()
+	err := c.BindQuery(options)
+	if err != nil {
+		responser.ResponseError(c, err)
+		return
+	}
+
+	packets := database.GetPacketsByOriginAndProject(projectName, origin, options)
+	responser.ResponseOk(c, packets)
 }
