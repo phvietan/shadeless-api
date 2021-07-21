@@ -53,8 +53,7 @@ func (this *ProjectDatabase) GetOneProjectById(id primitive.ObjectID) *Project {
 
 func (this *ProjectDatabase) GetOneProjectByName(name string) *Project {
 	project := &Project{}
-	err := this.db.First(bson.M{"name": name}, project)
-	if err != nil {
+	if err := this.db.First(bson.M{"name": name}, project); err != nil {
 		fmt.Errorf("%v", err)
 		return nil
 	}

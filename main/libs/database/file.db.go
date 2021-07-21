@@ -7,8 +7,8 @@ import (
 type File struct {
 	mgm.DefaultModel `bson:",inline"`
 
-	Project string
-	FileId  string
+	Project string `bson:"project"`
+	FileId  string `bson:"fileId"`
 }
 
 func NewFile(project string, fileId string) *File {

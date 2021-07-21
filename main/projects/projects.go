@@ -34,7 +34,11 @@ func isProjectExist(name string) bool {
 
 func postProjects(c *gin.Context) {
 	project := database.NewProject()
-	c.BindJSON(project)
+	if err := c.BindJSON(project); err != nil {
+		responser.ResponseError(c, err)
+		return
+	}
+
 	if isProjectExist(project.Name) {
 		responser.ResponseError(c, errors.New("Project with that name is already exist"))
 		return
@@ -50,7 +54,10 @@ func postProjects(c *gin.Context) {
 
 func putProjects(c *gin.Context) {
 	newProject := database.NewProject()
-	c.BindJSON(newProject)
+	if err := c.BindJSON(newProject); err != nil {
+		responser.ResponseError(c, err)
+		return
+	}
 
 	id, err := primitive.ObjectIDFromHex(c.Param("id"))
 	if err != nil {
@@ -80,7 +87,10 @@ type deleteOption struct {
 
 func deleteProjects(c *gin.Context) {
 	option := new(deleteOption)
-	c.BindJSON(option)
+	if err := c.BindJSON(option); err != nil {
+		responser.ResponseError(c, err)
+		return
+	}
 
 	id, err := primitive.ObjectIDFromHex(c.Param("id"))
 	if err != nil {

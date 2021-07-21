@@ -7,8 +7,7 @@ import (
 type Packet struct {
 	mgm.DefaultModel `bson:",inline"`
 
-	RequestPacketId string `json:"requestPacketId" bson:"requestPacketId"`
-
+	RequestPacketId    string   `json:"requestPacketId" bson:"requestPacketId"`
 	ToolName           string   `json:"toolName" bson:"toolName"`
 	Method             string   `json:"method"`
 	RequestLength      int      `json:"requestLength" bson:"requestLength"`
@@ -31,7 +30,7 @@ type Packet struct {
 	ResponseStatusText       string   `json:"responseStatusText" bson:"responseStatusText"`
 	ResponseLength           int      `json:"responseLength" bson:"responseLength"`
 	ResponseMimeType         string   `json:"responseMimeType" bson:"responseMimeType"`
-	ResponseHttpVersion      int      `json:"responseHttpVersion" bson:"responseHttpVersion"`
+	ResponseHttpVersion      string   `json:"responseHttpVersion" bson:"responseHttpVersion"`
 	ResponseInferredMimeType string   `json:"responseInferredMimeType" bson:"responseInferredMimeType"`
 	ResponseCookies          string   `json:"responseCookies" bson:"responseCookies"`
 	ResponseBodyHash         string   `json:"responseBodyHash" bson:"responseBodyHash"`
@@ -40,4 +39,7 @@ type Packet struct {
 	ReflectedParameters      []string `json:"reflectedParameters" bson:"reflectedParameters"`
 	Project                  string   `json:"project"`
 	CodeName                 string   `json:"codeName"`
+
+	RequestPacketIndex  int    `json:"requestPacketIndex" bson:"requestPacketIndex"`
+	RequestPacketPrefix string `json:"requestPacketPrefix" bson:"requestPacketPrefix"`
 }

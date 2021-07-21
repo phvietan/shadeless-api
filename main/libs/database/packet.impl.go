@@ -111,3 +111,37 @@ func (this *PacketDatabase) DeletePacketsByProjectName(projectName string) error
 	}
 	return nil
 }
+
+func (this *PacketDatabase) GetPacketsAsTimeTravel(projectName string, packetPrefix string, packetIndex int, number int) []Packet {
+	pipeline := []bson.M{
+		bson.M{"$match": bson.M{
+			"requestPacketPrefix": packetPrefix,
+			"project":             projectName,
+			"requestPacketIndex":  bson.M{"$gte": packetIndex, "$lt": packetIndex + number},
+		}},
+		bson.M{"$sort": bson.M{"requestPacketIndex": 1}},
+		bson.M{"$project": bson.M{
+			"requestPacketId":     1,
+			"requestPacketPrefix": 1,
+			"requestPacketIndex":  1,
+			"requestBodyHash":     1,
+			"responseBodyHash":    1,
+			"requestHeaders":      1,
+			"responseHeaders":     1,
+			"codeName":            1,
+			"reflectedParameters": 1,
+		}},
+	}
+	cursor, err := this.db.Aggregate(this.ctx, pipeline)
+	if err != nil {
+		fmt.Errorf("%v", err)
+		return []Packet{}
+	}
+
+	results := []Packet{}
+	if err := cursor.All(this.ctx, &results); err != nil {
+		fmt.Errorf("%v", err)
+		return []Packet{}
+	}
+	return results
+}

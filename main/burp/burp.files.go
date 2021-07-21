@@ -1,7 +1,7 @@
 package burp
 
 import (
-	"net/http"
+	"errors"
 	"os"
 	"path"
 	"shadeless-api/main/libs/database"
@@ -13,7 +13,7 @@ import (
 func uploadFile(c *gin.Context) {
 	file, err := c.FormFile("file")
 	if err != nil {
-		responser.ResponseJson(c, http.StatusInternalServerError, "", "No file uploaded")
+		responser.ResponseError(c, errors.New("No file uploaded"))
 		return
 	}
 
@@ -29,17 +29,17 @@ func uploadFile(c *gin.Context) {
 
 	// The file is received, so let's save it
 	if err := c.SaveUploadedFile(file, fileName); err != nil {
-		responser.ResponseJson(c, http.StatusInternalServerError, "", err.Error())
+		responser.ResponseError(c, err)
 		return
 	}
 
-	newFileDB := database.NewFile(project, id)
 	var fileDatabase database.IFileDatabase = new(database.FileDatabase).Init()
-	if err := fileDatabase.CreateFile(newFileDB); err != nil {
-		responser.ResponseJson(c, http.StatusInternalServerError, "", err.Error())
-		return
+	if fileInDb := fileDatabase.GetFileByProjectAndId(project, id); fileInDb == nil {
+		newFileDB := database.NewFile(project, id)
+		if err := fileDatabase.CreateFile(newFileDB); err != nil {
+			responser.ResponseError(c, err)
+			return
+		}
 	}
-
-	// File saved successfully. Return proper result
-	responser.ResponseJson(c, http.StatusOK, "Your file has been successfully uploaded.", "")
+	responser.ResponseOk(c, "Your file has been successfully uploaded.")
 }

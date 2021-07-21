@@ -1,9 +1,13 @@
 package projects
 
 import (
+	"errors"
+	"fmt"
 	"shadeless-api/main/libs/database"
 	"shadeless-api/main/libs/finder"
 	"shadeless-api/main/libs/responser"
+	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -28,6 +32,7 @@ func ProjectPacketRoutes(route *gin.Engine) {
 		projects.GET("/metadata", getProjectMetadata)
 		projects.GET("/packets", getPacketsByOrigin)
 		projects.GET("/numberPackets", getNumPacketsByOrigin)
+		projects.GET("/timeTravel", getTimeTravel)
 	}
 }
 
@@ -57,13 +62,45 @@ func getPacketsByOrigin(c *gin.Context) {
 	origin := c.Query("origin")
 
 	options := new(finder.FinderOptions)
-	err := c.Bind(options)
-	if err != nil {
+	if err := c.BindQuery(options); err != nil {
 		responser.ResponseError(c, err)
 		return
 	}
 
 	var packetDb database.IPacketDatabase = new(database.PacketDatabase).Init()
 	packets := packetDb.GetPacketsByOriginAndProject(projectName, origin, options)
+	responser.ResponseOk(c, packets)
+}
+
+type timeTravelOptions struct {
+	RequestPacketId string `form:"requestPacketId"`
+	Number          int    `form:"number"`
+}
+
+func getTimeTravel(c *gin.Context) {
+	options := new(timeTravelOptions)
+	if err := c.Bind(options); err != nil {
+		responser.ResponseError(c, err)
+		return
+	}
+	projectName := c.Param("projectName")
+
+	fmt.Println(options)
+
+	arr := strings.Split(options.RequestPacketId, ".")
+	if len(arr) != 2 || len(arr[0]) != 36 {
+		responser.ResponseError(c, errors.New("Wrong requestPacketId format"))
+		return
+	}
+	var packetIndex int
+	var err error
+	if packetIndex, err = strconv.Atoi(arr[1]); err != nil {
+		responser.ResponseError(c, errors.New("Wrong requestPacketId format"))
+		return
+	}
+	packetPrefix := arr[0]
+
+	var packetDb database.IPacketDatabase = new(database.PacketDatabase).Init()
+	packets := packetDb.GetPacketsAsTimeTravel(projectName, packetPrefix, packetIndex, options.Number)
 	responser.ResponseOk(c, packets)
 }

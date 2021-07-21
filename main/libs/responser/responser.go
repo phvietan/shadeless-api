@@ -1,6 +1,7 @@
 package responser
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -31,6 +32,7 @@ func ResponseOk(c *gin.Context, data interface{}) {
 }
 
 func ResponseError(c *gin.Context, err error) {
+	fmt.Errorf("Error at %s: %v", c.FullPath(), err)
 	response := responseBody{
 		StatusCode: http.StatusInternalServerError,
 		Data:       "",

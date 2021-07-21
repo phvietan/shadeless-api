@@ -12,6 +12,7 @@ type IPacketDatabase interface {
 	GetParametersByProjectName(projectName string) []string
 	GetReflectedParametersByProjectName(projectName string) []string
 	GetNumPacketsByOrigin(projectName string, origin string) int32
+	GetPacketsAsTimeTravel(projectName string, packetPrefix string, packetIndex int, number int) []Packet
 	GetPacketsByOriginAndProject(projectName string, origin string, options *finder.FinderOptions) []Packet
 
 	DeletePacketsByProjectName(projectName string) error

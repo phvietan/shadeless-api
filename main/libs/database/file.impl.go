@@ -29,6 +29,15 @@ func (this *FileDatabase) CreateFile(file *File) error {
 	return nil
 }
 
+func (this *FileDatabase) GetFileByProjectAndId(project string, id string) *File {
+	result := &File{}
+	if err := this.db.First(bson.M{"project": project, "fileId": id}, result); err != nil {
+		fmt.Errorf("%v", err)
+		return nil
+	}
+	return result
+}
+
 func (this *FileDatabase) DeleteFilesByProjectName(projectName string) error {
 	if _, err := this.db.DeleteMany(this.ctx, bson.M{"project": projectName}); err != nil {
 		return err
