@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"shadeless-api/main/libs/database"
 	"shadeless-api/main/libs/responser"
 
 	"github.com/gin-gonic/gin"
@@ -28,6 +29,13 @@ func uploadFile(c *gin.Context) {
 
 	// The file is received, so let's save it
 	if err := c.SaveUploadedFile(file, fileName); err != nil {
+		responser.ResponseJson(c, http.StatusInternalServerError, "", err.Error())
+		return
+	}
+
+	newFileDB := database.NewFile(project, id)
+	var fileDatabase database.IFileDatabase = new(database.FileDatabase).Init()
+	if err := fileDatabase.CreateFile(newFileDB); err != nil {
 		responser.ResponseJson(c, http.StatusInternalServerError, "", err.Error())
 		return
 	}

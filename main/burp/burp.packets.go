@@ -11,7 +11,8 @@ func postPackets(c *gin.Context) {
 	packet := new(database.Packet)
 	c.BindJSON(packet)
 
-	err := database.CreatePacket(packet)
+	var packetDb database.IPacketDatabase = new(database.PacketDatabase).Init()
+	err := packetDb.CreatePacket(packet)
 	if err != nil {
 		responser.ResponseJson(c, 500, "", "Cannot create packet: "+err.Error())
 		return

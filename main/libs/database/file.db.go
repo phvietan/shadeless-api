@@ -1,9 +1,6 @@
 package database
 
 import (
-	"errors"
-	"fmt"
-
 	"github.com/kamva/mgm/v3"
 )
 
@@ -14,13 +11,9 @@ type File struct {
 	FileId  string
 }
 
-func CreateFile(file *File) error {
-	if file == nil {
-		return errors.New("Project object is nil")
+func NewFile(project string, fileId string) *File {
+	return &File{
+		Project: project,
+		FileId:  fileId,
 	}
-	err := mgm.Coll(file).Create(file)
-	if err != nil {
-		fmt.Println(err)
-	}
-	return nil
 }

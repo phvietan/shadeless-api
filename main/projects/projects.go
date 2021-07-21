@@ -1,6 +1,7 @@
 package projects
 
 import (
+	"errors"
 	"shadeless-api/main/libs/database"
 	"shadeless-api/main/libs/responser"
 
@@ -20,15 +21,27 @@ func Routes(route *gin.Engine) {
 }
 
 func getProjects(c *gin.Context) {
-	projects := database.GetProjects()
+	var projectDb database.IProjectDatabase = new(database.ProjectDatabase).Init()
+	projects := projectDb.GetProjects()
 	responser.ResponseOk(c, projects)
+}
+
+func isProjectExist(name string) bool {
+	var projectDb database.IProjectDatabase = new(database.ProjectDatabase).Init()
+	check := projectDb.GetOneProjectByName(name)
+	return check != nil
 }
 
 func postProjects(c *gin.Context) {
 	project := database.NewProject()
 	c.BindJSON(project)
-	err := database.CreateProject(project)
-	if err != nil {
+	if isProjectExist(project.Name) {
+		responser.ResponseError(c, errors.New("Project with that name is already exist"))
+		return
+	}
+
+	var projectDb database.IProjectDatabase = new(database.ProjectDatabase).Init()
+	if err := projectDb.CreateProject(project); err != nil {
 		responser.ResponseError(c, err)
 		return
 	}
@@ -36,29 +49,62 @@ func postProjects(c *gin.Context) {
 }
 
 func putProjects(c *gin.Context) {
+	newProject := database.NewProject()
+	c.BindJSON(newProject)
+
 	id, err := primitive.ObjectIDFromHex(c.Param("id"))
 	if err != nil {
 		responser.ResponseError(c, err)
+		return
 	}
-	project := database.NewProject()
-	c.BindJSON(project)
-	err = database.UpdateProject(id, project)
-	if err != nil {
+
+	var projectDb database.IProjectDatabase = new(database.ProjectDatabase).Init()
+	dbProject := projectDb.GetOneProjectById(id)
+	if dbProject.Name != newProject.Name {
+		if isProjectExist(newProject.Name) {
+			responser.ResponseError(c, errors.New("Project with that name is already exist"))
+			return
+		}
+	}
+
+	if err = projectDb.UpdateProject(id, newProject); err != nil {
 		responser.ResponseError(c, err)
 		return
 	}
 	responser.ResponseOk(c, "Successfully update project")
 }
 
+type deleteOption struct {
+	All bool `json:"all"`
+}
+
 func deleteProjects(c *gin.Context) {
+	option := new(deleteOption)
+	c.BindJSON(option)
+
 	id, err := primitive.ObjectIDFromHex(c.Param("id"))
 	if err != nil {
 		responser.ResponseError(c, err)
-	}
-	err = database.DeleteProject(id)
-	if err != nil {
-		responser.ResponseJson(c, 500, "", "Cannot delete project: "+err.Error())
 		return
+	}
+
+	var projectDb database.IProjectDatabase = new(database.ProjectDatabase).Init()
+	project := projectDb.GetOneProjectById(id)
+	if project == nil {
+		responser.ResponseError(c, errors.New("Cannot delete project: project with this id is not found"))
+		return
+	}
+
+	if err = projectDb.DeleteProject(id); err != nil {
+		responser.ResponseError(c, err)
+		return
+	}
+	if option.All == true {
+		var packetDb database.IPacketDatabase = new(database.PacketDatabase).Init()
+		if err := packetDb.DeletePacketsByProjectName(project.Name); err != nil {
+			responser.ResponseError(c, err)
+			return
+		}
 	}
 	responser.ResponseJson(c, 200, "Successfully delete project", "")
 }

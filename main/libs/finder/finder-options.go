@@ -5,8 +5,8 @@ const (
 )
 
 type FinderOptions struct {
-	Limit int `json:"limit"`
-	Skip  int `json:"skip"`
+	Limit int `json:"limit" form:"limit"`
+	Skip  int `json:"skip" form:"skip"`
 }
 
 func NewFinderOptions() *FinderOptions {

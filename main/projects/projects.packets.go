@@ -33,9 +33,11 @@ func ProjectPacketRoutes(route *gin.Engine) {
 
 func getProjectMetadata(c *gin.Context) {
 	projectName := c.Param("projectName")
-	origins := database.GetOrigins(projectName)
-	parameters := database.GetParameters(projectName)
-	reflectedParameters := database.GetReflectedParameters(projectName)
+
+	var packetDb database.IPacketDatabase = new(database.PacketDatabase).Init()
+	origins := packetDb.GetOriginsByProjectName(projectName)
+	parameters := packetDb.GetParametersByProjectName(projectName)
+	reflectedParameters := packetDb.GetReflectedParametersByProjectName(projectName)
 
 	metaData := NewMetaData(origins, parameters, reflectedParameters)
 	responser.ResponseOk(c, metaData)
@@ -44,7 +46,9 @@ func getProjectMetadata(c *gin.Context) {
 func getNumPacketsByOrigin(c *gin.Context) {
 	projectName := c.Param("projectName")
 	origin := c.Query("origin")
-	numPackets := database.GetNumPacketsByOrigin(projectName, origin)
+
+	var packetDb database.IPacketDatabase = new(database.PacketDatabase).Init()
+	numPackets := packetDb.GetNumPacketsByOrigin(projectName, origin)
 	responser.ResponseOk(c, numPackets)
 }
 
@@ -52,13 +56,14 @@ func getPacketsByOrigin(c *gin.Context) {
 	projectName := c.Param("projectName")
 	origin := c.Query("origin")
 
-	options := finder.NewFinderOptions()
-	err := c.BindQuery(options)
+	options := new(finder.FinderOptions)
+	err := c.Bind(options)
 	if err != nil {
 		responser.ResponseError(c, err)
 		return
 	}
 
-	packets := database.GetPacketsByOriginAndProject(projectName, origin, options)
+	var packetDb database.IPacketDatabase = new(database.PacketDatabase).Init()
+	packets := packetDb.GetPacketsByOriginAndProject(projectName, origin, options)
 	responser.ResponseOk(c, packets)
 }
