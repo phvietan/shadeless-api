@@ -25,9 +25,9 @@ func (this *PacketDatabase) CreatePacket(packet *Packet) error {
 	if packet == nil {
 		return errors.New("Packet object is nil")
 	}
-	err := this.db.Create(packet)
-	if err != nil {
-		fmt.Println(err)
+	if err := this.db.Create(packet); err != nil {
+		fmt.Errorf("%v", err)
+		return err
 	}
 	return nil
 }
@@ -71,7 +71,7 @@ func (this *PacketDatabase) GetNumPacketsByOrigin(projectName string, origin str
 
 	cursor, err := this.db.Aggregate(this.ctx, pipeline)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Errorf("%v", err)
 		return 0
 	}
 	var allDocs []bson.M

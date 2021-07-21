@@ -2,7 +2,6 @@ package projects
 
 import (
 	"errors"
-	"fmt"
 	"shadeless-api/main/libs/database"
 	"shadeless-api/main/libs/finder"
 	"shadeless-api/main/libs/responser"
@@ -84,9 +83,6 @@ func getTimeTravel(c *gin.Context) {
 		return
 	}
 	projectName := c.Param("projectName")
-
-	fmt.Println(options)
-
 	arr := strings.Split(options.RequestPacketId, ".")
 	if len(arr) != 2 || len(arr[0]) != 36 {
 		responser.ResponseError(c, errors.New("Wrong requestPacketId format"))

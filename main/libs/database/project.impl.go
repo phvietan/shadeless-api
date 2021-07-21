@@ -25,7 +25,8 @@ func (this *ProjectDatabase) CreateProject(project *Project) error {
 		return errors.New("Project object is nil")
 	}
 	if err := this.db.Create(project); err != nil {
-		fmt.Println(err)
+		fmt.Errorf("%v", err)
+		return err
 	}
 	return nil
 }
@@ -36,7 +37,7 @@ func (this *ProjectDatabase) GetProjects() []Project {
 
 	results := []Project{}
 	if err := this.db.SimpleFind(&results, bson.M{}, findOptions); err != nil {
-		fmt.Println(err.Error())
+		fmt.Errorf("%v", err)
 		return []Project{}
 	}
 	return results
