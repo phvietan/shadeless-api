@@ -8,7 +8,7 @@ then
 fi
 
 cd ..
-sudo docker-compose stop
+# sudo docker-compose stop
 sudo docker-compose up -d --build
 cd main
 
