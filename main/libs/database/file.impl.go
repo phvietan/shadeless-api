@@ -2,7 +2,6 @@ package database
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/kamva/mgm/v3"
 	"go.mongodb.org/mongo-driver/bson"
@@ -22,17 +21,12 @@ func (this *FileDatabase) CreateFile(file *File) error {
 	if file == nil {
 		return errors.New("Project object is nil")
 	}
-	if err := this.db.Create(file); err != nil {
-		fmt.Errorf("%v", err)
-		return err
-	}
-	return nil
+	return this.db.Create(file)
 }
 
 func (this *FileDatabase) GetFileByProjectAndId(project string, id string) *File {
 	result := &File{}
 	if err := this.db.First(bson.M{"project": project, "fileId": id}, result); err != nil {
-		fmt.Errorf("%v", err)
 		return nil
 	}
 	return result
