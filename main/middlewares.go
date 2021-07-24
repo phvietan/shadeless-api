@@ -18,12 +18,8 @@ func setHeaderOctetStream() gin.HandlerFunc {
 func setHeaderForApi() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Header("Content-Type", "application/json")
-		c.Header("Access-Control-Allow-Credentials", "true")
 		c.Header("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
 		c.Header("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding")
-		c.Header("Vary", "Access-Control-Request-Method")
-		c.Header("Vary", "Access-Control-Request-Headers")
-		c.Header("Access-Control-Allow-Credentials", "Access-Control-Request-Headers")
 		c.Next()
 	}
 }

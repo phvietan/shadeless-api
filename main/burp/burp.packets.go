@@ -17,7 +17,7 @@ func decorateInputPacket(p *database.Packet) (*database.Packet, error) {
 		return nil, errors.New("Burp packet is nil")
 	}
 	arr := strings.Split(p.RequestPacketId, ".")
-	if len(arr) != 2 || len(arr[0]) != 36 {
+	if len(arr) != 2 {
 		return nil, errors.New("Request packet id format is wrong")
 	}
 	var err error
@@ -34,6 +34,7 @@ func postPackets(c *gin.Context) {
 		responser.ResponseError(c, err)
 		return
 	}
+	inputPacket.RequestPacketId = strings.ToLower(inputPacket.RequestPacketId)
 
 	packet, err := decorateInputPacket(inputPacket)
 	if err != nil {
@@ -42,6 +43,11 @@ func postPackets(c *gin.Context) {
 	}
 
 	var packetDb database.IPacketDatabase = new(database.PacketDatabase).Init()
+	if found := packetDb.GetPacketByPacketId(packet.Project, packet.RequestPacketId); found != nil {
+		responser.ResponseError(c, errors.New("Packet with this packet id already existed"))
+		return
+	}
+
 	if err := packetDb.CreatePacket(packet); err != nil {
 		responser.ResponseError(c, err)
 		return

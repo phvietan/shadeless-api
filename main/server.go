@@ -12,7 +12,7 @@ func healthCheckHandler(c *gin.Context) {
 	c.String(200, "Health check ok")
 }
 
-func main() {
+func spawnApp() *gin.Engine {
 	router := gin.Default()
 	router.GET("/healthcheck", healthCheckHandler)
 
@@ -24,5 +24,10 @@ func main() {
 
 	burp.Routes(router)
 	projects.Routes(router)
+	return router
+}
+
+func main() {
+	router := spawnApp()
 	router.Run(config.GetInstance().GetBindAddress()) // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }

@@ -25,20 +25,20 @@ type Packet struct {
 	Parameters         []string `json:"parameters"`
 	RequestHeaders     []string `json:"requestHeaders" bson:"requestHeaders"`
 
-	ResponseStatus           int      `json:"responseStatus" bson:"responseStatus"`
-	ResponseContentType      string   `json:"responseContentType" bson:"responseContentType"`
-	ResponseStatusText       string   `json:"responseStatusText" bson:"responseStatusText"`
-	ResponseLength           int      `json:"responseLength" bson:"responseLength"`
-	ResponseMimeType         string   `json:"responseMimeType" bson:"responseMimeType"`
-	ResponseHttpVersion      string   `json:"responseHttpVersion" bson:"responseHttpVersion"`
-	ResponseInferredMimeType string   `json:"responseInferredMimeType" bson:"responseInferredMimeType"`
-	ResponseCookies          string   `json:"responseCookies" bson:"responseCookies"`
-	ResponseBodyHash         string   `json:"responseBodyHash" bson:"responseBodyHash"`
-	ResponseHeaders          []string `json:"responseHeaders" bson:"responseHeaders"`
-	Rtt                      int      `json:"rtt"`
-	ReflectedParameters      []string `json:"reflectedParameters" bson:"reflectedParameters"`
-	Project                  string   `json:"project"`
-	CodeName                 string   `json:"codeName"`
+	ResponseStatus           int               `json:"responseStatus" bson:"responseStatus"`
+	ResponseContentType      string            `json:"responseContentType" bson:"responseContentType"`
+	ResponseStatusText       string            `json:"responseStatusText" bson:"responseStatusText"`
+	ResponseLength           int               `json:"responseLength" bson:"responseLength"`
+	ResponseMimeType         string            `json:"responseMimeType" bson:"responseMimeType"`
+	ResponseHttpVersion      string            `json:"responseHttpVersion" bson:"responseHttpVersion"`
+	ResponseInferredMimeType string            `json:"responseInferredMimeType" bson:"responseInferredMimeType"`
+	ResponseCookies          string            `json:"responseCookies" bson:"responseCookies"`
+	ResponseBodyHash         string            `json:"responseBodyHash" bson:"responseBodyHash"`
+	ResponseHeaders          []string          `json:"responseHeaders" bson:"responseHeaders"`
+	Rtt                      int               `json:"rtt"`
+	ReflectedParameters      map[string]string `json:"reflectedParameters" bson:"reflectedParameters"`
+	Project                  string            `json:"project"`
+	CodeName                 string            `json:"codeName"`
 
 	RequestPacketIndex  int    `json:"requestPacketIndex" bson:"requestPacketIndex"`
 	RequestPacketPrefix string `json:"requestPacketPrefix" bson:"requestPacketPrefix"`

@@ -145,3 +145,12 @@ func (this *PacketDatabase) GetPacketsAsTimeTravel(projectName string, packetPre
 	}
 	return results
 }
+
+func (this *PacketDatabase) GetPacketByPacketId(projectName string, packetId string) *Packet {
+	result := &Packet{}
+	if err := this.db.First(bson.M{"project": projectName, "requestPacketId": packetId}, result); err != nil {
+		fmt.Errorf("%v", err)
+		return nil
+	}
+	return result
+}

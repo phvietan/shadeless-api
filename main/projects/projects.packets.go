@@ -84,7 +84,7 @@ func getTimeTravel(c *gin.Context) {
 	}
 	projectName := c.Param("projectName")
 	arr := strings.Split(options.RequestPacketId, ".")
-	if len(arr) != 2 || len(arr[0]) != 36 {
+	if len(arr) != 2 {
 		responser.ResponseError(c, errors.New("Wrong requestPacketId format"))
 		return
 	}

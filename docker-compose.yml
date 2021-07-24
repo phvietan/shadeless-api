@@ -2,7 +2,7 @@ version: "3.9"
 services:
   shadeless-db:
     container_name: shadeless-db
-    image: mongo:latest
+    image: mongo:5
     ports:
       - "27017:27017"
     volumes:
