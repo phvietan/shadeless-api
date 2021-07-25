@@ -24,11 +24,7 @@ func (this *ProjectDatabase) CreateProject(project *Project) error {
 	if project == nil {
 		return errors.New("Project object is nil")
 	}
-	if err := this.db.Create(project); err != nil {
-		fmt.Errorf("%v", err)
-		return err
-	}
-	return nil
+	return this.db.Create(project)
 }
 
 func (this *ProjectDatabase) GetProjects() []Project {
@@ -37,7 +33,7 @@ func (this *ProjectDatabase) GetProjects() []Project {
 
 	results := []Project{}
 	if err := this.db.SimpleFind(&results, bson.M{}, findOptions); err != nil {
-		fmt.Errorf("%v", err)
+		fmt.Println(err)
 		return []Project{}
 	}
 	return results
@@ -46,7 +42,7 @@ func (this *ProjectDatabase) GetProjects() []Project {
 func (this *ProjectDatabase) GetOneProjectById(id primitive.ObjectID) *Project {
 	project := &Project{}
 	if err := this.db.FindByID(id, project); err != nil {
-		fmt.Errorf("%v", err)
+		fmt.Println(err)
 		return nil
 	}
 	return project
@@ -55,19 +51,10 @@ func (this *ProjectDatabase) GetOneProjectById(id primitive.ObjectID) *Project {
 func (this *ProjectDatabase) GetOneProjectByName(name string) *Project {
 	project := &Project{}
 	if err := this.db.First(bson.M{"name": name}, project); err != nil {
-		fmt.Errorf("%v", err)
+		fmt.Println(err)
 		return nil
 	}
 	return project
-}
-
-func (this *ProjectDatabase) GetNumberDocumentsByProject(name string) int64 {
-	num, err := this.db.CountDocuments(this.ctx, bson.M{"project": name})
-	if err != nil {
-		fmt.Errorf("%v", err)
-		return -1
-	}
-	return num
 }
 
 func (this *ProjectDatabase) UpdateProject(id primitive.ObjectID, project *Project) error {
@@ -80,6 +67,9 @@ func (this *ProjectDatabase) UpdateProject(id primitive.ObjectID, project *Proje
 	}
 	if project.Status != "" {
 		updated["status"] = project.Status
+	}
+	if len(project.Blacklist) != 0 {
+		updated["blacklist"] = project.Blacklist
 	}
 
 	if _, err := this.db.UpdateByID(this.ctx, id, bson.D{{"$set", updated}}); err != nil {
