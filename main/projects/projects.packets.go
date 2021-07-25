@@ -28,11 +28,18 @@ func NewMetaData(origins []string, parameters []string, reflectedParameters []st
 func ProjectPacketRoutes(route *gin.Engine) {
 	projects := route.Group("/projects/:projectName")
 	{
+		projects.GET("", getProjectByName)
 		projects.GET("/metadata", getProjectMetadata)
 		projects.GET("/packets", getPacketsByOrigin)
 		projects.GET("/numberPackets", getNumPacketsByOrigin)
 		projects.GET("/timeTravel", getTimeTravel)
 	}
+}
+
+func getProjectByName(c *gin.Context) {
+	var projectDb database.IProjectDatabase = new(database.ProjectDatabase).Init()
+	project := projectDb.GetOneProjectByName(c.Param("projectName"))
+	responser.ResponseOk(c, project)
 }
 
 func getProjectMetadata(c *gin.Context) {

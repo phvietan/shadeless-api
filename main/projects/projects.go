@@ -2,6 +2,8 @@ package projects
 
 import (
 	"errors"
+	"os"
+	"shadeless-api/main/libs"
 	"shadeless-api/main/libs/database"
 	"shadeless-api/main/libs/responser"
 
@@ -35,6 +37,10 @@ func isProjectExist(name string) bool {
 func postProjects(c *gin.Context) {
 	project := database.NewProject()
 	if err := c.BindJSON(project); err != nil {
+		responser.ResponseError(c, err)
+		return
+	}
+	if err := libs.Validator.ValidateProjectName(project.Name); err != nil {
 		responser.ResponseError(c, err)
 		return
 	}
@@ -112,6 +118,16 @@ func deleteProjects(c *gin.Context) {
 	if option.All == true {
 		var packetDb database.IPacketDatabase = new(database.PacketDatabase).Init()
 		if err := packetDb.DeletePacketsByProjectName(project.Name); err != nil {
+			responser.ResponseError(c, err)
+			return
+		}
+		var fileDb database.IFileDatabase = new(database.FileDatabase).Init()
+		if err := fileDb.DeleteFilesByProjectName(project.Name); err != nil {
+			responser.ResponseError(c, err)
+			return
+		}
+		err := os.RemoveAll("./files/" + project.Name)
+		if err != nil {
 			responser.ResponseError(c, err)
 			return
 		}
