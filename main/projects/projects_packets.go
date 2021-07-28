@@ -2,6 +2,7 @@ package projects
 
 import (
 	"errors"
+	"fmt"
 	"shadeless-api/main/libs/database"
 	"shadeless-api/main/libs/finder"
 	"shadeless-api/main/libs/responser"
@@ -84,6 +85,7 @@ type timeTravelOptions struct {
 }
 
 func getTimeTravel(c *gin.Context) {
+	fmt.Println("???")
 	options := new(timeTravelOptions)
 	if err := c.Bind(options); err != nil {
 		responser.ResponseError(c, err)
@@ -92,12 +94,14 @@ func getTimeTravel(c *gin.Context) {
 	projectName := c.Param("projectName")
 	arr := strings.Split(options.RequestPacketId, ".")
 	if len(arr) != 2 {
+		fmt.Println("1: ", options.RequestPacketId)
 		responser.ResponseError(c, errors.New("Wrong requestPacketId format"))
 		return
 	}
 	var packetIndex int
 	var err error
 	if packetIndex, err = strconv.Atoi(arr[1]); err != nil {
+		fmt.Println("2: ", options.RequestPacketId)
 		responser.ResponseError(c, errors.New("Wrong requestPacketId format"))
 		return
 	}

@@ -28,6 +28,7 @@ var mongoServer *memongo.Server = nil
 
 func init() {
 	if config.GetInstance().GetEnvironment() == "test" {
+		fmt.Println("Test suite: creating mongo memory database")
 		var err error
 		mongoServer, err = memongo.Start("4.0.5")
 		if err != nil {
