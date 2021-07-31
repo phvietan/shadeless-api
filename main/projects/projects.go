@@ -3,7 +3,6 @@ package projects
 import (
 	"errors"
 	"os"
-	"shadeless-api/main/libs"
 	"shadeless-api/main/libs/database"
 	"shadeless-api/main/libs/responser"
 
@@ -16,7 +15,8 @@ func Routes(route *gin.Engine) {
 	{
 		projects.GET("/", getProjects)
 		projects.POST("/", postProjects)
-		projects.PUT("/:id", putProjects)
+		projects.PUT("/:id", putProject)
+		projects.PUT("/:id/status", putProjectStatus)
 		projects.DELETE("/:id", deleteProjects)
 	}
 	ProjectPacketRoutes(route)
@@ -40,7 +40,11 @@ func postProjects(c *gin.Context) {
 		responser.ResponseError(c, err)
 		return
 	}
-	if err := libs.Validator.ValidateProjectName(project.Name); err != nil {
+	if project.Name == "" {
+		responser.ResponseError(c, errors.New("Project name cannot be empty"))
+		return
+	}
+	if err := database.Validator.ValidateProjectName(project.Name); err != nil {
 		responser.ResponseError(c, err)
 		return
 	}
@@ -58,9 +62,47 @@ func postProjects(c *gin.Context) {
 	responser.ResponseOk(c, "Successfully create project")
 }
 
-func putProjects(c *gin.Context) {
+func putProjectStatus(c *gin.Context) {
+	type status struct {
+		Status string `json:"status"`
+	}
+	newStatus := new(status)
+	if err := c.BindJSON(newStatus); err != nil {
+		responser.ResponseError(c, err)
+		return
+	}
+
+	id, err := primitive.ObjectIDFromHex(c.Param("id"))
+	if err != nil {
+		responser.ResponseError(c, err)
+		return
+	}
+
+	var projectDb database.IProjectDatabase = new(database.ProjectDatabase).Init()
+	if err = projectDb.UpdateProjectStatus(id, newStatus.Status); err != nil {
+		responser.ResponseError(c, err)
+		return
+	}
+
+	responser.ResponseOk(c, "Successfully update project status")
+}
+
+func putProject(c *gin.Context) {
 	newProject := database.NewProject()
 	if err := c.BindJSON(newProject); err != nil {
+		responser.ResponseError(c, err)
+		return
+	}
+	if newProject.Name == "" {
+		responser.ResponseError(c, errors.New("Project name cannot be empty"))
+		return
+	}
+
+	if err := database.Validator.ValidateProjectName(newProject.Name); err != nil {
+		responser.ResponseError(c, err)
+		return
+	}
+	if err := database.Validator.ValidateProjectBlacklist(newProject.Blacklist); err != nil {
 		responser.ResponseError(c, err)
 		return
 	}
@@ -84,6 +126,21 @@ func putProjects(c *gin.Context) {
 		responser.ResponseError(c, err)
 		return
 	}
+
+	if dbProject.Name != newProject.Name {
+		var packetDb database.IPacketDatabase = new(database.PacketDatabase).Init()
+		if err = packetDb.UpdateProjectName(dbProject.Name, newProject.Name); err != nil {
+			responser.ResponseError(c, err)
+			return
+		}
+
+		var fileDb database.IFileDatabase = new(database.FileDatabase).Init()
+		if err = fileDb.UpdateProjectName(dbProject.Name, newProject.Name); err != nil {
+			responser.ResponseError(c, err)
+			return
+		}
+	}
+
 	responser.ResponseOk(c, "Successfully update project")
 }
 

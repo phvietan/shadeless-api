@@ -13,12 +13,12 @@ import (
 )
 
 type metaData struct {
-	Origins             []string `json:"origins"`
-	Parameters          []string `json:"parameters"`
-	ReflectedParameters []string `json:"reflectedParameters"`
+	Origins             []string          `json:"origins"`
+	Parameters          []string          `json:"parameters"`
+	ReflectedParameters map[string]string `json:"reflectedParameters"`
 }
 
-func NewMetaData(origins []string, parameters []string, reflectedParameters []string) *metaData {
+func NewMetaData(origins []string, parameters []string, reflectedParameters map[string]string) *metaData {
 	return &metaData{
 		Origins:             origins,
 		Parameters:          parameters,
@@ -40,17 +40,22 @@ func ProjectPacketRoutes(route *gin.Engine) {
 func getProjectByName(c *gin.Context) {
 	var projectDb database.IProjectDatabase = new(database.ProjectDatabase).Init()
 	project := projectDb.GetOneProjectByName(c.Param("projectName"))
+	if project == nil {
+		responser.Response404(c, "Not found project with that name")
+		return
+	}
 	responser.ResponseOk(c, project)
 }
 
 func getProjectMetadata(c *gin.Context) {
 	projectName := c.Param("projectName")
-
 	var packetDb database.IPacketDatabase = new(database.PacketDatabase).Init()
-	origins := packetDb.GetOriginsByProjectName(projectName)
-	parameters := packetDb.GetParametersByProjectName(projectName)
-	reflectedParameters := packetDb.GetReflectedParametersByProjectName(projectName)
-
+	var projectDb database.IProjectDatabase = new(database.ProjectDatabase).Init()
+	project := projectDb.GetOneProjectByName(projectName)
+	if project == nil {
+		responser.Response404(c, "Not found project with this name")
+	}
+	origins, parameters, reflectedParameters := packetDb.GetMetadataByProject(project)
 	metaData := NewMetaData(origins, parameters, reflectedParameters)
 	responser.ResponseOk(c, metaData)
 }
@@ -85,7 +90,6 @@ type timeTravelOptions struct {
 }
 
 func getTimeTravel(c *gin.Context) {
-	fmt.Println("???")
 	options := new(timeTravelOptions)
 	if err := c.Bind(options); err != nil {
 		responser.ResponseError(c, err)

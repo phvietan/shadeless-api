@@ -38,3 +38,12 @@ func (this *FileDatabase) DeleteFilesByProjectName(projectName string) error {
 	}
 	return nil
 }
+
+func (this *FileDatabase) UpdateProjectName(oldName string, newName string) error {
+	_, err := this.db.UpdateMany(
+		this.ctx,
+		bson.M{"project": oldName},
+		bson.D{{"$set", bson.M{"project": newName}}},
+	)
+	return err
+}

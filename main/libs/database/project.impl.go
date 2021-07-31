@@ -58,21 +58,24 @@ func (this *ProjectDatabase) GetOneProjectByName(name string) *Project {
 }
 
 func (this *ProjectDatabase) UpdateProject(id primitive.ObjectID, project *Project) error {
-	updated := bson.M{}
-	if project.Name != "" {
-		updated["name"] = project.Name
-	}
-	if project.Description != "" {
-		updated["description"] = project.Description
-	}
-	if project.Status != "" {
-		updated["status"] = project.Status
-	}
-	if len(project.Blacklist) != 0 {
-		updated["blacklist"] = project.Blacklist
+	updated := bson.M{
+		"name":        project.Name,
+		"description": project.Description,
+		"blacklist":   project.Blacklist,
 	}
 
 	if _, err := this.db.UpdateByID(this.ctx, id, bson.D{{"$set", updated}}); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (this *ProjectDatabase) UpdateProjectStatus(id primitive.ObjectID, newStatus string) error {
+	if _, err := this.db.UpdateByID(this.ctx, id,
+		bson.D{{"$set", bson.M{
+			"status": newStatus,
+		}}},
+	); err != nil {
 		return err
 	}
 	return nil
