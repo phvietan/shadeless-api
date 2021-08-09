@@ -221,8 +221,11 @@ func (this *PacketDatabase) GetPacketsAsTimeTravel(projectName string, packetPre
 			"responseBodyHash":    1,
 			"requestHeaders":      1,
 			"responseHeaders":     1,
-			"codeName":            1,
+			"codename":            1,
 			"reflectedParameters": 1,
+			"created_at":          1,
+			"origin":              1,
+			"path":                1,
 		}},
 	}
 	cursor, err := this.db.Aggregate(this.ctx, pipeline)

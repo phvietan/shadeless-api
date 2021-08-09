@@ -73,6 +73,6 @@ func FilterBlacklistMatch(origins []string, blacklist []Blacklist) []string {
 func NewProject() *Project {
 	return &Project{
 		Status:    ProjectStatusTodo,
-		Blacklist: nil,
+		Blacklist: make([]Blacklist, 0),
 	}
 }

@@ -113,5 +113,7 @@ func getTimeTravel(c *gin.Context) {
 
 	var packetDb database.IPacketDatabase = new(database.PacketDatabase).Init()
 	packets := packetDb.GetPacketsAsTimeTravel(projectName, packetPrefix, packetIndex, options.Number)
+
+	fmt.Println(packets)
 	responser.ResponseOk(c, packets)
 }
