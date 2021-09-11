@@ -2,7 +2,6 @@ package projects
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"shadeless-api/main/libs/database"
@@ -55,7 +54,6 @@ func TestGetProjectByName(t *testing.T) {
 		req, _ = http.NewRequest("GET", "/projects/"+projectName, nil)
 		router.ServeHTTP(w, req)
 		err = json.Unmarshal([]byte(w.Body.String()), &resp)
-		fmt.Println(w.Body.String())
 		assert.Equal(t, err, nil)
 		assert.Equal(t, resp.StatusCode, 200)
 		assert.Equal(t, resp.Error, "")

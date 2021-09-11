@@ -71,7 +71,6 @@ func getUniqueOriginsFromPackets(arr []Packet) []string {
 			result = append(result, packet.Origin)
 		}
 	}
-	fmt.Println(result)
 	return result
 }
 func getUniqueParametersFromPackets(arr []Packet) []string {

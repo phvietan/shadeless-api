@@ -54,6 +54,7 @@ func getProjectMetadata(c *gin.Context) {
 	project := projectDb.GetOneProjectByName(projectName)
 	if project == nil {
 		responser.Response404(c, "Not found project with this name")
+		return
 	}
 	origins, parameters, reflectedParameters := packetDb.GetMetadataByProject(project)
 	metaData := NewMetaData(origins, parameters, reflectedParameters)
