@@ -25,6 +25,8 @@ func decorateInputPacket(p *database.Packet) (*database.Packet, error) {
 		return nil, errors.New("Request packet id format is wrong")
 	}
 	p.RequestPacketPrefix = arr[0]
+	p.ParametersLength = len(p.Parameters)
+	p.Fuzzed = false
 	return p, nil
 }
 

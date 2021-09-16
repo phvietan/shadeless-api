@@ -23,6 +23,8 @@ type Packet struct {
 	Querystring        string   `json:"querystring"`
 	RequestBodyHash    string   `json:"requestBodyHash" bson:"requestBodyHash"`
 	Parameters         []string `json:"parameters"`
+	Fuzzed             bool     `bson:"fuzzed"`
+	ParametersLength   int      `bson:"parametersLength"`
 	RequestHeaders     []string `json:"requestHeaders" bson:"requestHeaders"`
 
 	ResponseStatus           int               `json:"responseStatus" bson:"responseStatus"`
