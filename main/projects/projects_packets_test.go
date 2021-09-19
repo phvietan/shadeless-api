@@ -49,7 +49,7 @@ func TestGetProjectByName(t *testing.T) {
 
 		newProject := database.NewProject()
 		newProject.Name = projectName
-		projectData.CreateProject(newProject)
+		projectData.Insert(newProject)
 
 		req, _ = http.NewRequest("GET", "/projects/"+projectName, nil)
 		router.ServeHTTP(w, req)

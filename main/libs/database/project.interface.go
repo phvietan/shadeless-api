@@ -3,8 +3,9 @@ package database
 import "go.mongodb.org/mongo-driver/bson/primitive"
 
 type IProjectDatabase interface {
+	IDatabase
+
 	Init() *ProjectDatabase
-	CreateProject(project *Project) error
 
 	GetProjects() []Project
 	GetOneProjectById(id primitive.ObjectID) *Project

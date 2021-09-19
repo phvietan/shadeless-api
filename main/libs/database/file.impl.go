@@ -1,7 +1,7 @@
 package database
 
 import (
-	"errors"
+	"fmt"
 
 	"github.com/kamva/mgm/v3"
 	"go.mongodb.org/mongo-driver/bson"
@@ -17,33 +17,15 @@ func (this *FileDatabase) Init() *FileDatabase {
 	return this
 }
 
-func (this *FileDatabase) CreateFile(file *File) error {
-	if file == nil {
-		return errors.New("Project object is nil")
-	}
-	return this.db.Create(file)
-}
-
 func (this *FileDatabase) GetFileByProjectAndId(project string, id string) *File {
 	result := &File{}
-	if err := this.db.First(bson.M{"project": project, "fileId": id}, result); err != nil {
+	if err := this.db.FirstWithCtx(
+		this.ctx,
+		bson.M{"project": project, "fileId": id},
+		result,
+	); err != nil {
+		fmt.Println(err)
 		return nil
 	}
 	return result
-}
-
-func (this *FileDatabase) DeleteFilesByProjectName(projectName string) error {
-	if _, err := this.db.DeleteMany(this.ctx, bson.M{"project": projectName}); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (this *FileDatabase) UpdateProjectName(oldName string, newName string) error {
-	_, err := this.db.UpdateMany(
-		this.ctx,
-		bson.M{"project": oldName},
-		bson.D{{"$set", bson.M{"project": newName}}},
-	)
-	return err
 }

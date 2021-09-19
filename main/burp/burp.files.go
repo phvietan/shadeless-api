@@ -36,7 +36,7 @@ func uploadFile(c *gin.Context) {
 	var fileDatabase database.IFileDatabase = new(database.FileDatabase).Init()
 	if fileInDb := fileDatabase.GetFileByProjectAndId(project, id); fileInDb == nil {
 		newFileDB := database.NewFile(project, id)
-		if err := fileDatabase.CreateFile(newFileDB); err != nil {
+		if err := fileDatabase.Insert(newFileDB); err != nil {
 			responser.ResponseError(c, err)
 			return
 		}

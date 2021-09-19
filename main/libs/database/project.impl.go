@@ -1,7 +1,6 @@
 package database
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/kamva/mgm/v3"
@@ -18,13 +17,6 @@ func (this *ProjectDatabase) Init() *ProjectDatabase {
 	this.ctx = mgm.Ctx()
 	this.db = mgm.Coll(&Project{})
 	return this
-}
-
-func (this *ProjectDatabase) CreateProject(project *Project) error {
-	if project == nil {
-		return errors.New("Project object is nil")
-	}
-	return this.db.Create(project)
 }
 
 func (this *ProjectDatabase) GetProjects() []Project {
@@ -50,7 +42,11 @@ func (this *ProjectDatabase) GetOneProjectById(id primitive.ObjectID) *Project {
 
 func (this *ProjectDatabase) GetOneProjectByName(name string) *Project {
 	project := &Project{}
-	if err := this.db.First(bson.M{"name": name}, project); err != nil {
+	if err := this.db.FirstWithCtx(
+		this.ctx,
+		bson.M{"name": name},
+		project,
+	); err != nil {
 		fmt.Println(err)
 		return nil
 	}

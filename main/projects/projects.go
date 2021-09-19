@@ -2,6 +2,7 @@ package projects
 
 import (
 	"errors"
+	"log"
 	"os"
 	"shadeless-api/main/libs/database"
 	"shadeless-api/main/libs/responser"
@@ -55,7 +56,7 @@ func postProjects(c *gin.Context) {
 	}
 
 	var projectDb database.IProjectDatabase = new(database.ProjectDatabase).Init()
-	if err := projectDb.CreateProject(project); err != nil {
+	if err := projectDb.Insert(project); err != nil {
 		responser.ResponseError(c, err)
 		return
 	}
@@ -129,15 +130,25 @@ func putProject(c *gin.Context) {
 
 	if dbProject.Name != newProject.Name {
 		var packetDb database.IPacketDatabase = new(database.PacketDatabase).Init()
-		if err = packetDb.UpdateProjectName(dbProject.Name, newProject.Name); err != nil {
+		if err = packetDb.UpdateOneProperty("project", dbProject.Name, newProject.Name); err != nil {
+			responser.ResponseError(c, err)
+			return
+		}
+
+		var parsedPacketDb database.IParsedPacketDatabase = new(database.ParsedPacketDatabase).Init()
+		if err = parsedPacketDb.UpdateOneProperty("project", dbProject.Name, newProject.Name); err != nil {
 			responser.ResponseError(c, err)
 			return
 		}
 
 		var fileDb database.IFileDatabase = new(database.FileDatabase).Init()
-		if err = fileDb.UpdateProjectName(dbProject.Name, newProject.Name); err != nil {
+		if err = fileDb.UpdateOneProperty("project", dbProject.Name, newProject.Name); err != nil {
 			responser.ResponseError(c, err)
 			return
+		}
+		err = os.Rename("./files/"+dbProject.Name, "./files/"+newProject.Name)
+		if err != nil {
+			log.Fatal(err)
 		}
 	}
 
@@ -174,12 +185,17 @@ func deleteProjects(c *gin.Context) {
 	}
 	if option.All == true {
 		var packetDb database.IPacketDatabase = new(database.PacketDatabase).Init()
-		if err := packetDb.DeletePacketsByProjectName(project.Name); err != nil {
+		if err := packetDb.DeleteByOneProperty("project", project.Name); err != nil {
 			responser.ResponseError(c, err)
 			return
 		}
 		var fileDb database.IFileDatabase = new(database.FileDatabase).Init()
-		if err := fileDb.DeleteFilesByProjectName(project.Name); err != nil {
+		if err := fileDb.DeleteByOneProperty("project", project.Name); err != nil {
+			responser.ResponseError(c, err)
+			return
+		}
+		var parsedPacketDb database.IParsedPacketDatabase = new(database.ParsedPacketDatabase).Init()
+		if err := parsedPacketDb.DeleteByOneProperty("project", project.Name); err != nil {
 			responser.ResponseError(c, err)
 			return
 		}

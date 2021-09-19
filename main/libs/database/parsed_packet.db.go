@@ -1,10 +1,17 @@
 package database
 
 import (
+	"crypto/md5"
+	"encoding/hex"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"strconv"
+
 	"github.com/kamva/mgm/v3"
 )
 
-type Packet struct {
+type ParsedPacket struct {
 	mgm.DefaultModel `bson:",inline"`
 
 	RequestPacketId    string   `json:"requestPacketId" bson:"requestPacketId"`
@@ -25,6 +32,9 @@ type Packet struct {
 	Parameters         []string `json:"parameters"`
 	RequestHeaders     []string `json:"requestHeaders" bson:"requestHeaders"`
 
+	Hash   string            `json:"hash" bson:"hash"`
+	Fuzzed map[string]string `json:"fuzzed" bson:"fuzzed"`
+
 	ResponseStatus           int               `json:"responseStatus" bson:"responseStatus"`
 	ResponseContentType      string            `json:"responseContentType" bson:"responseContentType"`
 	ResponseStatusText       string            `json:"responseStatusText" bson:"responseStatusText"`
@@ -42,4 +52,49 @@ type Packet struct {
 
 	RequestPacketIndex  int    `json:"requestPacketIndex" bson:"requestPacketIndex"`
 	RequestPacketPrefix string `json:"requestPacketPrefix" bson:"requestPacketPrefix"`
+}
+
+const (
+	fuzzNew     = "new"
+	fuzzRunning = "running"
+	fuzzDone    = "done"
+)
+
+func makeDefaultFuzzMap() map[string]string {
+	m := make(map[string]string)
+	m["commix"] = fuzzNew
+	m["jaeles"] = fuzzNew
+	return m
+}
+
+func (this *ParsedPacket) ParseFromPacket(packet *Packet) (*ParsedPacket, error) {
+	if packet == nil {
+		return nil, errors.New("Cannot parse: Packet should not be nil")
+	}
+	bytesPacket, err := json.Marshal(packet)
+	if err != nil {
+		fmt.Println(err)
+		return nil, errors.New("Cannot parse input packet to JSON")
+	}
+	result := new(ParsedPacket)
+	if err := json.Unmarshal(bytesPacket, result); err != nil {
+		return nil, err
+	}
+	result.Fuzzed = makeDefaultFuzzMap()
+	result.setHash()
+	return result, nil
+}
+
+func (this *ParsedPacket) setHash() string {
+	s := "responseStatus:" + strconv.Itoa(this.ResponseStatus) + ";origin:" + this.Origin + ";path:" + this.Path + "parameters:"
+	for idx, val := range this.Parameters {
+		delimiter := ","
+		if idx == len(this.Parameters)-1 {
+			delimiter = ";"
+		}
+		s += val + delimiter
+	}
+	b := md5.Sum([]byte(s))
+	this.Hash = hex.EncodeToString(b[:])
+	return this.Hash
 }

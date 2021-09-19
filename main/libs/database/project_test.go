@@ -41,13 +41,13 @@ func TestFilterBlacklistMatch(t *testing.T) {
 func TestCreateProject(t *testing.T) {
 	var dbInstance IProjectDatabase = new(ProjectDatabase).Init()
 	defer dbInstance.ClearCollection()
-	err := dbInstance.CreateProject(nil)
+	err := dbInstance.Insert(nil)
 	assert.Equal(t, err.Error(), "Project object is nil")
 
 	for i := 0; i < 10; i++ {
 		newProject := NewProject()
 		newProject.Name = libs.RandomString(32)
-		err := dbInstance.CreateProject(newProject)
+		err := dbInstance.Insert(newProject)
 		assert.Equal(t, err, nil)
 
 		allProjects := dbInstance.GetProjects()
@@ -61,7 +61,7 @@ func TestCreateAndGetAllProject(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		newProject := NewProject()
 		newProject.Name = libs.RandomString(32)
-		err := dbInstance.CreateProject(newProject)
+		err := dbInstance.Insert(newProject)
 		assert.Equal(t, err, nil)
 
 		allProjects := dbInstance.GetProjects()
@@ -75,7 +75,7 @@ func TestProjectQuery(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		newProject := NewProject()
 		newProject.Name = libs.RandomString(32)
-		err := dbInstance.CreateProject(newProject)
+		err := dbInstance.Insert(newProject)
 		assert.Equal(t, err, nil)
 
 		dbProjectByName := dbInstance.GetOneProjectByName(newProject.Name)
@@ -101,7 +101,7 @@ func TestProjectUpdate(t *testing.T) {
 		newProject := NewProject()
 		newProject.Name = libs.RandomString(32)
 		newProject.Description = libs.RandomString(32)
-		err := dbInstance.CreateProject(newProject)
+		err := dbInstance.Insert(newProject)
 		assert.Equal(t, err, nil)
 
 		dbProjectByName := dbInstance.GetOneProjectByName(newProject.Name)
@@ -143,7 +143,7 @@ func TestProjectDelete(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		newProject := NewProject()
 		newProject.Name = libs.RandomString(32)
-		err = dbInstance.CreateProject(newProject)
+		err = dbInstance.Insert(newProject)
 		assert.Equal(t, err, nil)
 
 		allProjects := dbInstance.GetProjects()

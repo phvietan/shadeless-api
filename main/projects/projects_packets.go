@@ -32,7 +32,6 @@ func ProjectPacketRoutes(route *gin.Engine) {
 		projects.GET("", getProjectByName)
 		projects.GET("/metadata", getProjectMetadata)
 		projects.GET("/packets", getPacketsByOrigin)
-		projects.GET("/numberPackets", getNumPacketsByOrigin)
 		projects.GET("/timeTravel", getTimeTravel)
 	}
 }
@@ -49,25 +48,16 @@ func getProjectByName(c *gin.Context) {
 
 func getProjectMetadata(c *gin.Context) {
 	projectName := c.Param("projectName")
-	var packetDb database.IPacketDatabase = new(database.PacketDatabase).Init()
 	var projectDb database.IProjectDatabase = new(database.ProjectDatabase).Init()
 	project := projectDb.GetOneProjectByName(projectName)
 	if project == nil {
 		responser.Response404(c, "Not found project with this name")
 		return
 	}
-	origins, parameters, reflectedParameters := packetDb.GetMetadataByProject(project)
+	var parsedPacketDb database.IParsedPacketDatabase = new(database.ParsedPacketDatabase).Init()
+	origins, parameters, reflectedParameters := parsedPacketDb.GetMetadataByProject(project)
 	metaData := NewMetaData(origins, parameters, reflectedParameters)
 	responser.ResponseOk(c, metaData)
-}
-
-func getNumPacketsByOrigin(c *gin.Context) {
-	projectName := c.Param("projectName")
-	origin := c.Query("origin")
-
-	var packetDb database.IPacketDatabase = new(database.PacketDatabase).Init()
-	numPackets := packetDb.GetNumPacketsByOrigin(projectName, origin)
-	responser.ResponseOk(c, numPackets)
 }
 
 func getPacketsByOrigin(c *gin.Context) {
@@ -80,7 +70,7 @@ func getPacketsByOrigin(c *gin.Context) {
 		return
 	}
 
-	var packetDb database.IPacketDatabase = new(database.PacketDatabase).Init()
+	var packetDb database.IParsedPacketDatabase = new(database.ParsedPacketDatabase).Init()
 	packets := packetDb.GetPacketsByOriginAndProject(projectName, origin, options)
 	responser.ResponseOk(c, packets)
 }
