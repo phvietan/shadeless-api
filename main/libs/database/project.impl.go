@@ -2,6 +2,7 @@ package database
 
 import (
 	"fmt"
+	"shadeless-api/main/libs/database/schema"
 
 	"github.com/kamva/mgm/v3"
 	"go.mongodb.org/mongo-driver/bson"
@@ -15,24 +16,24 @@ type ProjectDatabase struct {
 
 func (this *ProjectDatabase) Init() *ProjectDatabase {
 	this.ctx = mgm.Ctx()
-	this.db = mgm.Coll(&Project{})
+	this.db = mgm.Coll(&schema.Project{})
 	return this
 }
 
-func (this *ProjectDatabase) GetProjects() []Project {
+func (this *ProjectDatabase) GetProjects() []schema.Project {
 	findOptions := options.Find()
 	findOptions.SetSort(bson.D{{"updated_at", -1}})
 
-	results := []Project{}
+	results := []schema.Project{}
 	if err := this.db.SimpleFind(&results, bson.M{}, findOptions); err != nil {
 		fmt.Println(err)
-		return []Project{}
+		return []schema.Project{}
 	}
 	return results
 }
 
-func (this *ProjectDatabase) GetOneProjectById(id primitive.ObjectID) *Project {
-	project := &Project{}
+func (this *ProjectDatabase) GetOneProjectById(id primitive.ObjectID) *schema.Project {
+	project := &schema.Project{}
 	if err := this.db.FindByID(id, project); err != nil {
 		fmt.Println(err)
 		return nil
@@ -40,8 +41,8 @@ func (this *ProjectDatabase) GetOneProjectById(id primitive.ObjectID) *Project {
 	return project
 }
 
-func (this *ProjectDatabase) GetOneProjectByName(name string) *Project {
-	project := &Project{}
+func (this *ProjectDatabase) GetOneProjectByName(name string) *schema.Project {
+	project := &schema.Project{}
 	if err := this.db.FirstWithCtx(
 		this.ctx,
 		bson.M{"name": name},
@@ -53,7 +54,7 @@ func (this *ProjectDatabase) GetOneProjectByName(name string) *Project {
 	return project
 }
 
-func (this *ProjectDatabase) UpdateProject(id primitive.ObjectID, project *Project) error {
+func (this *ProjectDatabase) UpdateProject(id primitive.ObjectID, project *schema.Project) error {
 	updated := bson.M{
 		"name":        project.Name,
 		"description": project.Description,

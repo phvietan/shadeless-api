@@ -2,6 +2,7 @@ package database
 
 import (
 	"fmt"
+	"shadeless-api/main/libs/database/schema"
 
 	"github.com/kamva/mgm/v3"
 	"go.mongodb.org/mongo-driver/bson"
@@ -13,11 +14,11 @@ type PacketDatabase struct {
 
 func (this *PacketDatabase) Init() *PacketDatabase {
 	this.ctx = mgm.Ctx()
-	this.db = mgm.Coll(&Packet{})
+	this.db = mgm.Coll(&schema.Packet{})
 	return this
 }
 
-func getUniqueOriginsFromPackets(arr []Packet) []string {
+func getUniqueOriginsFromPackets(arr []schema.Packet) []string {
 	checkMap := make(map[string]bool)
 	result := make([]string, 0)
 	for _, packet := range arr {
@@ -28,7 +29,7 @@ func getUniqueOriginsFromPackets(arr []Packet) []string {
 	}
 	return result
 }
-func getUniqueParametersFromPackets(arr []Packet) []string {
+func getUniqueParametersFromPackets(arr []schema.Packet) []string {
 	checkMap := make(map[string]bool)
 	result := make([]string, 0)
 	for _, packet := range arr {
@@ -41,7 +42,7 @@ func getUniqueParametersFromPackets(arr []Packet) []string {
 	}
 	return result
 }
-func getReflectedParametersFromPackets(arr []Packet) map[string]string {
+func getReflectedParametersFromPackets(arr []schema.Packet) map[string]string {
 	result := make(map[string]string)
 	for _, packet := range arr {
 		for key, val := range packet.ReflectedParameters {
@@ -51,11 +52,11 @@ func getReflectedParametersFromPackets(arr []Packet) map[string]string {
 	return result
 }
 
-func parseFilterOptionsFromProject(project *Project) bson.M {
+func parseFilterOptionsFromProject(project *schema.Project) bson.M {
 	blacklistExact := make([]string, 0)
 	blacklistRegex := ""
 	for _, bl := range project.Blacklist {
-		if bl.Type == BlacklistValue {
+		if bl.Type == schema.BlacklistValue {
 			blacklistExact = append(blacklistExact, bl.Value)
 		} else {
 			blacklistRegex = bl.Value
@@ -81,7 +82,7 @@ func parseFilterOptionsFromProject(project *Project) bson.M {
 	return filter
 }
 
-func (this *PacketDatabase) GetPacketsAsTimeTravel(projectName string, packetPrefix string, packetIndex int, number int) []Packet {
+func (this *PacketDatabase) GetPacketsAsTimeTravel(projectName string, packetPrefix string, packetIndex int, number int) []schema.Packet {
 	pipeline := []bson.M{
 		bson.M{"$match": bson.M{
 			"requestPacketPrefix": packetPrefix,
@@ -107,19 +108,19 @@ func (this *PacketDatabase) GetPacketsAsTimeTravel(projectName string, packetPre
 	cursor, err := this.db.Aggregate(this.ctx, pipeline)
 	if err != nil {
 		fmt.Println("Error in GetPacketsAsTimeTravel1: ", err)
-		return []Packet{}
+		return []schema.Packet{}
 	}
 
-	results := []Packet{}
+	results := []schema.Packet{}
 	if err := cursor.All(this.ctx, &results); err != nil {
 		fmt.Println("Error in GetPacketsAsTimeTravel2: ", err)
-		return []Packet{}
+		return []schema.Packet{}
 	}
 	return results
 }
 
-func (this *PacketDatabase) GetPacketByPacketId(projectName string, packetId string) *Packet {
-	result := &Packet{}
+func (this *PacketDatabase) GetPacketByPacketId(projectName string, packetId string) *schema.Packet {
+	result := &schema.Packet{}
 	if err := this.db.FirstWithCtx(
 		this.ctx,
 		bson.M{"project": projectName, "requestPacketId": packetId},

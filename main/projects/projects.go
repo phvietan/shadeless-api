@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"shadeless-api/main/libs/database"
+	"shadeless-api/main/libs/database/schema"
 	"shadeless-api/main/libs/responser"
 
 	"github.com/gin-gonic/gin"
@@ -36,16 +37,13 @@ func isProjectExist(name string) bool {
 }
 
 func postProjects(c *gin.Context) {
-	project := database.NewProject()
+	project := schema.NewProject()
 	if err := c.BindJSON(project); err != nil {
 		responser.ResponseError(c, err)
 		return
 	}
-	if project.Name == "" {
-		responser.ResponseError(c, errors.New("Project name cannot be empty"))
-		return
-	}
-	if err := database.Validator.ValidateProjectName(project.Name); err != nil {
+
+	if err := project.Validate(); err != nil {
 		responser.ResponseError(c, err)
 		return
 	}
@@ -89,21 +87,12 @@ func putProjectStatus(c *gin.Context) {
 }
 
 func putProject(c *gin.Context) {
-	newProject := database.NewProject()
+	newProject := schema.NewProject()
 	if err := c.BindJSON(newProject); err != nil {
 		responser.ResponseError(c, err)
 		return
 	}
-	if newProject.Name == "" {
-		responser.ResponseError(c, errors.New("Project name cannot be empty"))
-		return
-	}
-
-	if err := database.Validator.ValidateProjectName(newProject.Name); err != nil {
-		responser.ResponseError(c, err)
-		return
-	}
-	if err := database.Validator.ValidateProjectBlacklist(newProject.Blacklist); err != nil {
+	if err := newProject.Validate(); err != nil {
 		responser.ResponseError(c, err)
 		return
 	}

@@ -2,25 +2,20 @@ package database
 
 import (
 	"shadeless-api/main/libs"
+	"shadeless-api/main/libs/database/schema"
 	"testing"
 
 	"github.com/go-playground/assert/v2"
 )
 
-func TestNewProject(t *testing.T) {
-	p := NewProject()
-	assert.Equal(t, len(p.Blacklist), 0)
-	assert.Equal(t, p.Status, ProjectStatusTodo)
-}
-
 func TestFilterBlacklistMatch(t *testing.T) {
 	for i := 0; i < 20; i++ {
-		blacklist := []Blacklist{}
-		blacklistValue, err := NewBlacklist(libs.RandomString(32), BlacklistValue)
+		blacklist := []schema.Blacklist{}
+		blacklistValue, err := schema.NewBlacklist(libs.RandomString(32), schema.BlacklistValue)
 		assert.Equal(t, err, nil)
 		blacklist = append(blacklist, *blacklistValue)
 
-		blacklistRegex, err := NewBlacklist("^a", BlacklistRegex)
+		blacklistRegex, err := schema.NewBlacklist("^a", schema.BlacklistRegex)
 		assert.Equal(t, err, nil)
 		blacklist = append(blacklist, *blacklistRegex)
 
@@ -28,7 +23,7 @@ func TestFilterBlacklistMatch(t *testing.T) {
 			blacklistValue.Value,
 			libs.RandomString(32),
 		}
-		filtered := FilterBlacklistMatch(origins, blacklist)
+		filtered := schema.FilterBlacklistMatch(origins, blacklist)
 		assert.Equal(t, len(filtered) <= 1, true)
 		if origins[1][0] == 'a' {
 			assert.Equal(t, len(filtered) == 0, true)
@@ -42,10 +37,10 @@ func TestCreateProject(t *testing.T) {
 	var dbInstance IProjectDatabase = new(ProjectDatabase).Init()
 	defer dbInstance.ClearCollection()
 	err := dbInstance.Insert(nil)
-	assert.Equal(t, err.Error(), "Project object is nil")
+	assert.Equal(t, err.Error(), "Object to insert to mongo is nil")
 
 	for i := 0; i < 10; i++ {
-		newProject := NewProject()
+		newProject := schema.NewProject()
 		newProject.Name = libs.RandomString(32)
 		err := dbInstance.Insert(newProject)
 		assert.Equal(t, err, nil)
@@ -59,7 +54,7 @@ func TestCreateAndGetAllProject(t *testing.T) {
 	var dbInstance IProjectDatabase = new(ProjectDatabase).Init()
 	defer dbInstance.ClearCollection()
 	for i := 0; i < 10; i++ {
-		newProject := NewProject()
+		newProject := schema.NewProject()
 		newProject.Name = libs.RandomString(32)
 		err := dbInstance.Insert(newProject)
 		assert.Equal(t, err, nil)
@@ -73,7 +68,7 @@ func TestProjectQuery(t *testing.T) {
 	var dbInstance IProjectDatabase = new(ProjectDatabase).Init()
 	defer dbInstance.ClearCollection()
 	for i := 0; i < 10; i++ {
-		newProject := NewProject()
+		newProject := schema.NewProject()
 		newProject.Name = libs.RandomString(32)
 		err := dbInstance.Insert(newProject)
 		assert.Equal(t, err, nil)
@@ -98,7 +93,7 @@ func TestProjectUpdate(t *testing.T) {
 	var dbInstance IProjectDatabase = new(ProjectDatabase).Init()
 	defer dbInstance.ClearCollection()
 	for i := 0; i < 10; i++ {
-		newProject := NewProject()
+		newProject := schema.NewProject()
 		newProject.Name = libs.RandomString(32)
 		newProject.Description = libs.RandomString(32)
 		err := dbInstance.Insert(newProject)
@@ -110,14 +105,14 @@ func TestProjectUpdate(t *testing.T) {
 
 		newName := libs.RandomString(32)
 		newDescription := libs.RandomString(32)
-		blacklist, err := NewBlacklist("a", BlacklistRegex)
+		blacklist, err := schema.NewBlacklist("a", schema.BlacklistRegex)
 		assert.Equal(t, err, nil)
 
-		updateProject := NewProject()
+		updateProject := schema.NewProject()
 		updateProject.Name = newName
 		updateProject.Description = newDescription
-		updateProject.Status = ProjectStatusDone
-		updateProject.Blacklist = []Blacklist{*blacklist}
+		updateProject.Status = schema.ProjectStatusDone
+		updateProject.Blacklist = []schema.Blacklist{*blacklist}
 
 		err = dbInstance.UpdateProject(dbProjectByName.ID, updateProject)
 		assert.Equal(t, err, nil)
@@ -127,10 +122,9 @@ func TestProjectUpdate(t *testing.T) {
 
 		assert.Equal(t, dbProjectById.Name, newName)
 		assert.Equal(t, dbProjectById.Description, newDescription)
-		assert.Equal(t, dbProjectById.Status, ProjectStatusDone)
 		assert.Equal(t, len(dbProjectById.Blacklist[0].Value), 1)
 		assert.Equal(t, dbProjectById.Blacklist[0].Value, "a")
-		assert.Equal(t, dbProjectById.Blacklist[0].Type, BlacklistRegex)
+		assert.Equal(t, dbProjectById.Blacklist[0].Type, schema.BlacklistRegex)
 	}
 }
 
@@ -141,7 +135,7 @@ func TestProjectDelete(t *testing.T) {
 	assert.Equal(t, err, nil)
 
 	for i := 0; i < 10; i++ {
-		newProject := NewProject()
+		newProject := schema.NewProject()
 		newProject.Name = libs.RandomString(32)
 		err = dbInstance.Insert(newProject)
 		assert.Equal(t, err, nil)

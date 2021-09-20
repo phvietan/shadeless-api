@@ -1,4 +1,4 @@
-package database
+package schema
 
 import (
 	"crypto/md5"
@@ -32,8 +32,9 @@ type ParsedPacket struct {
 	Parameters         []string `json:"parameters"`
 	RequestHeaders     []string `json:"requestHeaders" bson:"requestHeaders"`
 
-	Hash   string            `json:"hash" bson:"hash"`
-	Fuzzed map[string]string `json:"fuzzed" bson:"fuzzed"`
+	Hash        string            `json:"hash" bson:"hash"`
+	Fuzzed      map[string]string `json:"fuzzed" bson:"fuzzed"`
+	StaticScore float64           `json:"staticScore" bson:"staticScore"`
 
 	ResponseStatus           int               `json:"responseStatus" bson:"responseStatus"`
 	ResponseContentType      string            `json:"responseContentType" bson:"responseContentType"`
@@ -82,7 +83,13 @@ func (this *ParsedPacket) ParseFromPacket(packet *Packet) (*ParsedPacket, error)
 	}
 	result.Fuzzed = makeDefaultFuzzMap()
 	result.setHash()
+	result.setStaticScore()
 	return result, nil
+}
+
+func (this *ParsedPacket) setStaticScore() {
+	score := NewStaticScorer(this).GetScore()
+	this.StaticScore = score
 }
 
 func (this *ParsedPacket) setHash() string {

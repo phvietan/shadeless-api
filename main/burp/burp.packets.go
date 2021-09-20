@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"shadeless-api/main/libs/database"
+	"shadeless-api/main/libs/database/schema"
 	"shadeless-api/main/libs/responser"
 	"sort"
 	"strconv"
@@ -14,7 +15,7 @@ import (
 
 // Parse packetID with following format: b20a4f41-3e31-48ee-8cde-8f5c81adb755.142
 // Into b20a4f41-3e31-48ee-8cde-8f5c81adb755 and 142
-func parsePacketIndex(p *database.Packet) (*database.Packet, error) {
+func parsePacketIndex(p *schema.Packet) (*schema.Packet, error) {
 	arr := strings.Split(p.RequestPacketId, ".")
 	if len(arr) != 2 {
 		return nil, errors.New("Request packet index format is wrong")
@@ -28,7 +29,7 @@ func parsePacketIndex(p *database.Packet) (*database.Packet, error) {
 	return p, nil
 }
 
-func decorateAndParseInputPacket(inputPacket *database.Packet) (*database.Packet, *database.ParsedPacket, error) {
+func decorateAndParseInputPacket(inputPacket *schema.Packet) (*schema.Packet, *schema.ParsedPacket, error) {
 	if inputPacket == nil {
 		return nil, nil, errors.New("Burp packet is nil")
 	}
@@ -36,14 +37,14 @@ func decorateAndParseInputPacket(inputPacket *database.Packet) (*database.Packet
 	if err != nil {
 		return nil, nil, err
 	}
-	parsedPacket, err := new(database.ParsedPacket).ParseFromPacket(packet)
+	parsedPacket, err := new(schema.ParsedPacket).ParseFromPacket(packet)
 	if err != nil {
 		return nil, nil, err
 	}
 	return packet, parsedPacket, nil
 }
 
-func insertToDb(packet *database.Packet, parsedPacket *database.ParsedPacket) error {
+func insertToDb(packet *schema.Packet, parsedPacket *schema.ParsedPacket) error {
 	// Normal packet
 	var packetDb database.IPacketDatabase = new(database.PacketDatabase).Init()
 	if found := packetDb.GetPacketByPacketId(packet.Project, packet.RequestPacketId); found != nil {
@@ -59,7 +60,7 @@ func insertToDb(packet *database.Packet, parsedPacket *database.ParsedPacket) er
 }
 
 func postPackets(c *gin.Context) {
-	inputPacket := new(database.Packet)
+	inputPacket := new(schema.Packet)
 	if err := c.BindJSON(inputPacket); err != nil {
 		fmt.Println("Cannot bind json input packet: ", err)
 		responser.ResponseError(c, err)

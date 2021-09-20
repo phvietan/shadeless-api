@@ -1,12 +1,15 @@
 package database
 
-import "shadeless-api/main/libs/finder"
+import (
+	"shadeless-api/main/libs/database/schema"
+	"shadeless-api/main/libs/finder"
+)
 
 type IParsedPacketDatabase interface {
 	IDatabase
 
 	Init() *ParsedPacketDatabase
-	Upsert(packet *ParsedPacket) error
-	GetMetadataByProject(project *Project) ([]string, []string, map[string]string)
-	GetPacketsByOriginAndProject(projectName string, origin string, options *finder.FinderOptions) []ParsedPacket
+	Upsert(packet *schema.ParsedPacket) error
+	GetMetadataByProject(project *schema.Project) ([]string, []string, map[string]string)
+	GetPacketsByOriginAndProject(projectName string, origin string, options *finder.FinderOptions) []schema.ParsedPacket
 }

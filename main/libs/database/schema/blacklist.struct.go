@@ -1,10 +1,8 @@
-package database
+package schema
 
 import (
 	"errors"
 	"regexp"
-
-	"github.com/kamva/mgm/v3"
 )
 
 const (
@@ -29,15 +27,6 @@ func NewBlacklist(value string, blacklistType string) (*Blacklist, error) {
 		Value: value,
 		Type:  blacklistType,
 	}, nil
-}
-
-type Project struct {
-	mgm.DefaultModel `bson:",inline"`
-
-	Name        string      `json:"name"`
-	Description string      `json:"description"`
-	Status      string      `json:"status"`
-	Blacklist   []Blacklist `json:"blacklist"`
 }
 
 func BlacklistMatch(origin string, blacklist []Blacklist) bool {
@@ -68,11 +57,4 @@ func FilterBlacklistMatch(origins []string, blacklist []Blacklist) []string {
 		}
 	}
 	return result
-}
-
-func NewProject() *Project {
-	return &Project{
-		Status:    ProjectStatusTodo,
-		Blacklist: make([]Blacklist, 0),
-	}
 }
