@@ -131,7 +131,7 @@ func TestProjectUpdate(t *testing.T) {
 func TestProjectDelete(t *testing.T) {
 	var dbInstance IProjectDatabase = new(ProjectDatabase).Init()
 	defer dbInstance.ClearCollection()
-	err := dbInstance.DeleteProject([12]byte{})
+	err := dbInstance.DeleteById([12]byte{})
 	assert.Equal(t, err, nil)
 
 	for i := 0; i < 10; i++ {
@@ -147,7 +147,7 @@ func TestProjectDelete(t *testing.T) {
 		assert.NotEqual(t, dbProjectByName, nil)
 		assert.Equal(t, dbProjectByName.Name, newProject.Name)
 
-		err = dbInstance.DeleteProject(dbProjectByName.ID)
+		err = dbInstance.DeleteById(dbProjectByName.ID)
 		assert.Equal(t, err, nil)
 
 		allProjects = dbInstance.GetProjects()

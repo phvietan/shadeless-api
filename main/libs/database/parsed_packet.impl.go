@@ -43,6 +43,36 @@ func (this *ParsedPacketDatabase) Upsert(packet *schema.ParsedPacket) error {
 	return err
 }
 
+func parseFilterOptionsFromProject(project *schema.Project) bson.M {
+	blacklistExact := make([]string, 0)
+	blacklistRegex := ""
+	for _, bl := range project.Blacklist {
+		if bl.Type == schema.BlacklistValue {
+			blacklistExact = append(blacklistExact, bl.Value)
+		} else {
+			blacklistRegex = bl.Value
+		}
+	}
+	filter := bson.M{}
+	if blacklistRegex != "" {
+		filter = bson.M{
+			"project": project.Name,
+			"origin": bson.M{
+				"$nin": blacklistExact,
+				"$not": bson.M{"$regex": blacklistRegex},
+			},
+		}
+	} else {
+		filter = bson.M{
+			"project": project.Name,
+			"origin": bson.M{
+				"$nin": blacklistExact,
+			},
+		}
+	}
+	return filter
+}
+
 func (this *ParsedPacketDatabase) GetMetadataByProject(project *schema.Project) ([]string, []string, map[string]string) {
 	if project == nil {
 		return []string{}, []string{}, make(map[string]string)

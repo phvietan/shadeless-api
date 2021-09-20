@@ -77,10 +77,3 @@ func (this *ProjectDatabase) UpdateProjectStatus(id primitive.ObjectID, newStatu
 	}
 	return nil
 }
-
-func (this *ProjectDatabase) DeleteProject(id primitive.ObjectID) error {
-	if _, err := this.db.DeleteOne(this.ctx, bson.M{"_id": id}); err != nil {
-		return err
-	}
-	return nil
-}

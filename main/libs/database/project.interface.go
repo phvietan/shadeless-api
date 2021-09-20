@@ -17,7 +17,4 @@ type IProjectDatabase interface {
 
 	UpdateProject(id primitive.ObjectID, project *schema.Project) error
 	UpdateProjectStatus(id primitive.ObjectID, newStatus string) error
-	DeleteProject(id primitive.ObjectID) error
-
-	ClearCollection()
 }

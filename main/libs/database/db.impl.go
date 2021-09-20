@@ -10,6 +10,7 @@ import (
 	"github.com/benweissmann/memongo"
 	"github.com/kamva/mgm/v3"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
@@ -32,6 +33,13 @@ func (this *Database) UpdateOneProperty(propertyKey string, propertyOldValue int
 		bson.D{{"$set", bson.M{propertyKey: propertyNewValue}}},
 	)
 	return err
+}
+
+func (this *Database) DeleteById(id primitive.ObjectID) error {
+	if _, err := this.db.DeleteOne(this.ctx, bson.M{"_id": id}); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (this *Database) DeleteByOneProperty(propertyKey string, propertyValue interface{}) error {

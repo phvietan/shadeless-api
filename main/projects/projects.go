@@ -168,7 +168,7 @@ func deleteProjects(c *gin.Context) {
 		return
 	}
 
-	if err = projectDb.DeleteProject(id); err != nil {
+	if err = projectDb.DeleteById(id); err != nil {
 		responser.ResponseError(c, err)
 		return
 	}
