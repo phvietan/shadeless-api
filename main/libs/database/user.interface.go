@@ -7,5 +7,7 @@ import (
 type IUserDatabase interface {
 	IDatabase
 	Init() *UserDatabase
-	GetUsers() []schema.User
+	GetUsers(project string) []schema.User
+	GetUserByProjectAndCodename(project string, codename string) *schema.User
+	Upsert(project string, codeName string)
 }

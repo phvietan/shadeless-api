@@ -26,7 +26,7 @@ func NewMetaData(origins []string, parameters []string, reflectedParameters map[
 	}
 }
 
-func ProjectPacketRoutes(route *gin.Engine) {
+func PacketsRoutes(route *gin.Engine) {
 	projects := route.Group("/projects/:projectName")
 	{
 		projects.GET("", getProjectByName)
@@ -89,14 +89,12 @@ func getTimeTravel(c *gin.Context) {
 	projectName := c.Param("projectName")
 	arr := strings.Split(options.RequestPacketId, ".")
 	if len(arr) != 2 {
-		fmt.Println("1: ", options.RequestPacketId)
 		responser.ResponseError(c, errors.New("Wrong requestPacketId format"))
 		return
 	}
 	var packetIndex int
 	var err error
 	if packetIndex, err = strconv.Atoi(arr[1]); err != nil {
-		fmt.Println("2: ", options.RequestPacketId)
 		responser.ResponseError(c, errors.New("Wrong requestPacketId format"))
 		return
 	}
@@ -105,5 +103,18 @@ func getTimeTravel(c *gin.Context) {
 	var packetDb database.IPacketDatabase = new(database.PacketDatabase).Init()
 	packets := packetDb.GetPacketsAsTimeTravel(projectName, packetPrefix, packetIndex, options.Number)
 
-	responser.ResponseOk(c, packets)
+	var parsedPacketDb database.IParsedPacketDatabase = new(database.ParsedPacketDatabase).Init()
+	parsedPacket := parsedPacketDb.GetParsedByRawPackets(projectName, packets)
+
+	if len(packets) != len(parsedPacket) {
+		fmt.Println("Soemthing is wrong in time travel")
+	}
+
+	var noteDb database.INoteDatabase = new(database.NoteDatabase).Init()
+	notes := noteDb.GetNotesByPackets(projectName, packets)
+
+	result := make(map[string]interface{})
+	result["packets"] = parsedPacket
+	result["notes"] = notes
+	responser.ResponseOk(c, result)
 }

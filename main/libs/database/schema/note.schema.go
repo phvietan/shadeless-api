@@ -5,15 +5,25 @@ import "github.com/kamva/mgm/v3"
 type Note struct {
 	mgm.DefaultModel `bson:",inline"`
 
-	UserId          string  `json:"userId" bson:"userId"`
+	Project         string  `json:"project" bson:"project"`
+	CodeName        string  `json:"codeName" bson:"codeName"`
+	RequestPacketId string  `json:"requestPacketId" bson:"requestPacketId"`
 	Tags            string  `json:"tags"`
 	Description     string  `json:"description"`
-	RequestPacketId string  `json:"requestPacketId" bson:"requestPacketId"`
 	Replies         []Reply `json:"replies" bson:"replies"`
 }
 
 type Reply struct {
-	NoteId      string `json:"noteId"`
-	UserId      string `json:"userId" bson:"userId"`
+	CodeName    string `json:"codeName" bson:"codeName"`
 	Description string `json:"description"`
+}
+
+func NewNote() *Note {
+	return &Note{
+		CodeName:        "",
+		RequestPacketId: "",
+		Tags:            "",
+		Description:     "",
+		Replies:         []Reply{},
+	}
 }

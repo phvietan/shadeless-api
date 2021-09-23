@@ -53,6 +53,8 @@ func insertToDb(packet *schema.Packet, parsedPacket *schema.ParsedPacket) error 
 	if err := packetDb.Insert(packet); err != nil {
 		return err
 	}
+	var userDb database.IUserDatabase = new(database.UserDatabase).Init()
+	userDb.Upsert(packet.Project, packet.CodeName)
 
 	// Parsed packet
 	var parsedPacketDb database.IParsedPacketDatabase = new(database.ParsedPacketDatabase).Init()

@@ -35,7 +35,7 @@ func (this *ParsedPacketDatabase) Upsert(packet *schema.ParsedPacket) error {
 		fmt.Println("Not found parse packet, creating one")
 		return this.Insert(packet)
 	}
-	// If found, then update, the fuzzed property should not be update, lol
+	// If found, then update, other properties like fuzzed, static_score should not be updated
 	packet.Fuzzed = result.Fuzzed
 	_, err := this.db.UpdateByID(this.ctx, result.ID, bson.M{
 		"$set": packet,
@@ -122,4 +122,53 @@ func (this *ParsedPacketDatabase) GetPacketsByOriginAndProject(projectName strin
 		return []schema.ParsedPacket{}
 	}
 	return results
+}
+
+func (this *ParsedPacketDatabase) GetParsedByRawPackets(project string, packets []schema.Packet) []schema.ParsedPacket {
+	packetsHash := []string{}
+	for _, p := range packets {
+		packetsHash = append(packetsHash, schema.CalculatePacketHash(
+			p.ResponseStatus,
+			p.Origin,
+			p.Path,
+			p.Parameters,
+		))
+	}
+	pipeline := []bson.M{
+		bson.M{
+			"$match": bson.M{
+				"hash": bson.M{
+					"$in": packetsHash,
+				},
+				"project": project,
+			},
+		},
+	}
+	cursor, err := this.db.Aggregate(this.ctx, pipeline)
+	if err != nil {
+		fmt.Println("Error in GetParsedByRawPackets: ", err)
+		return []schema.ParsedPacket{}
+	}
+
+	allParsedPacketInDB := []schema.ParsedPacket{}
+	if err := cursor.All(this.ctx, &allParsedPacketInDB); err != nil {
+		fmt.Println("Error in GetParsedByRawPackets: ", err)
+		return []schema.ParsedPacket{}
+	}
+
+	result := []schema.ParsedPacket{}
+	for idx, h := range packetsHash {
+		found := false
+		for _, parsedPacket := range allParsedPacketInDB {
+			if h == parsedPacket.Hash {
+				result = append(result, parsedPacket)
+				found = true
+				break
+			}
+		}
+		if !found {
+			fmt.Println("Not found time travel: ", packets[idx].RequestPacketId)
+		}
+	}
+	return result
 }

@@ -82,7 +82,7 @@ func (this *ParsedPacket) ParseFromPacket(packet *Packet) (*ParsedPacket, error)
 		return nil, err
 	}
 	result.Fuzzed = makeDefaultFuzzMap()
-	result.setHash()
+	result.Hash = CalculatePacketHash(this.ResponseStatus, this.Origin, this.Path, this.Parameters)
 	result.setStaticScore()
 	return result, nil
 }
@@ -92,16 +92,15 @@ func (this *ParsedPacket) setStaticScore() {
 	this.StaticScore = score
 }
 
-func (this *ParsedPacket) setHash() string {
-	s := "responseStatus:" + strconv.Itoa(this.ResponseStatus) + ";origin:" + this.Origin + ";path:" + this.Path + "parameters:"
-	for idx, val := range this.Parameters {
+func CalculatePacketHash(responseStatus int, origin string, path string, parameters []string) string {
+	s := "responseStatus:" + strconv.Itoa(responseStatus) + ";origin:" + origin + ";path:" + path + "parameters:"
+	for idx, val := range parameters {
 		delimiter := ","
-		if idx == len(this.Parameters)-1 {
+		if idx == len(parameters)-1 {
 			delimiter = ";"
 		}
 		s += val + delimiter
 	}
 	b := md5.Sum([]byte(s))
-	this.Hash = hex.EncodeToString(b[:])
-	return this.Hash
+	return hex.EncodeToString(b[:])
 }

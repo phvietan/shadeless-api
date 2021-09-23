@@ -17,11 +17,16 @@ func Routes(route *gin.Engine) {
 	{
 		projects.GET("/", getProjects)
 		projects.POST("/", postProjects)
-		projects.PUT("/:id", putProject)
-		projects.PUT("/:id/status", putProjectStatus)
-		projects.DELETE("/:id", deleteProjects)
+		// Actually 3 endpoints below are objectId of mongo. Because of stupid of Gin gonic, I must name it projectName here
+		// See more at: https://github.com/gin-gonic/gin/issues/1301#issuecomment-392346179
+		projects.PUT("/:projectName", putProject)
+		projects.PUT("/:projectName/status", putProjectStatus)
+		projects.DELETE("/:projectName", deleteProjects)
 	}
-	ProjectPacketRoutes(route)
+
+	PacketsRoutes(route)
+	NotesRoutes(route)
+	UsersRoutes(route)
 }
 
 func getProjects(c *gin.Context) {
@@ -71,7 +76,7 @@ func putProjectStatus(c *gin.Context) {
 		return
 	}
 
-	id, err := primitive.ObjectIDFromHex(c.Param("id"))
+	id, err := primitive.ObjectIDFromHex(c.Param("projectName"))
 	if err != nil {
 		responser.ResponseError(c, err)
 		return
@@ -97,7 +102,7 @@ func putProject(c *gin.Context) {
 		return
 	}
 
-	id, err := primitive.ObjectIDFromHex(c.Param("id"))
+	id, err := primitive.ObjectIDFromHex(c.Param("projectName"))
 	if err != nil {
 		responser.ResponseError(c, err)
 		return
@@ -155,7 +160,7 @@ func deleteProjects(c *gin.Context) {
 		return
 	}
 
-	id, err := primitive.ObjectIDFromHex(c.Param("id"))
+	id, err := primitive.ObjectIDFromHex(c.Param("projectName"))
 	if err != nil {
 		responser.ResponseError(c, err)
 		return
@@ -173,18 +178,28 @@ func deleteProjects(c *gin.Context) {
 		return
 	}
 	if option.All == true {
+		var userDb database.IUserDatabase = new(database.UserDatabase).Init()
+		if err := userDb.DeleteByOneProperty("project", project.Name); err != nil {
+			responser.ResponseError(c, err)
+			return
+		}
+		var noteDb database.INoteDatabase = new(database.NoteDatabase).Init()
+		if err := noteDb.DeleteByOneProperty("project", project.Name); err != nil {
+			responser.ResponseError(c, err)
+			return
+		}
 		var packetDb database.IPacketDatabase = new(database.PacketDatabase).Init()
 		if err := packetDb.DeleteByOneProperty("project", project.Name); err != nil {
 			responser.ResponseError(c, err)
 			return
 		}
-		var fileDb database.IFileDatabase = new(database.FileDatabase).Init()
-		if err := fileDb.DeleteByOneProperty("project", project.Name); err != nil {
+		var parsedPacketDb database.IParsedPacketDatabase = new(database.ParsedPacketDatabase).Init()
+		if err := parsedPacketDb.DeleteByOneProperty("project", project.Name); err != nil {
 			responser.ResponseError(c, err)
 			return
 		}
-		var parsedPacketDb database.IParsedPacketDatabase = new(database.ParsedPacketDatabase).Init()
-		if err := parsedPacketDb.DeleteByOneProperty("project", project.Name); err != nil {
+		var fileDb database.IFileDatabase = new(database.FileDatabase).Init()
+		if err := fileDb.DeleteByOneProperty("project", project.Name); err != nil {
 			responser.ResponseError(c, err)
 			return
 		}
@@ -194,5 +209,5 @@ func deleteProjects(c *gin.Context) {
 			return
 		}
 	}
-	responser.ResponseJson(c, 200, "Successfully delete project", "")
+	responser.ResponseOk(c, "Successfully delete project")
 }
