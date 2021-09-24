@@ -36,9 +36,9 @@ func (this *NoteDatabase) GetNotes(project string) []schema.Note {
 
 func (this *NoteDatabase) UpdateOne(id primitive.ObjectID, newNote *schema.Note) error {
 	updated := bson.M{
-		"replies":     newNote.Replies,
 		"description": newNote.Description,
 		"tags":        newNote.Tags,
+		"codeName":    newNote.CodeName,
 	}
 	if _, err := this.db.UpdateByID(this.ctx, id, bson.D{{"$set", updated}}); err != nil {
 		return err

@@ -53,3 +53,44 @@ func (this *PacketDatabase) GetPacketsAsTimeTravel(projectName string, packetPre
 	}
 	return results
 }
+
+func (this *PacketDatabase) GetPacketsByNotes(project string, notes []schema.Note) []schema.Packet {
+	packetsId := []string{}
+	for _, note := range notes {
+		packetsId = append(packetsId, note.RequestPacketId)
+	}
+	fmt.Println(packetsId)
+	pipeline := []bson.M{
+		bson.M{
+			"$match": bson.M{
+				"requestPacketId": bson.M{
+					"$in": packetsId,
+				},
+				"project": project,
+			},
+		},
+	}
+	cursor, err := this.db.Aggregate(this.ctx, pipeline)
+	if err != nil {
+		fmt.Println("Error in GetPacketsByNotes: ", err)
+		return []schema.Packet{}
+	}
+
+	allPacketsInDb := []schema.Packet{}
+	if err := cursor.All(this.ctx, &allPacketsInDb); err != nil {
+		fmt.Println("Error in GetPacketsByNotes: ", err)
+		return []schema.Packet{}
+	}
+
+	result := []schema.Packet{}
+	for _, id := range packetsId {
+		for _, packet := range allPacketsInDb {
+			if packet.RequestPacketId == id {
+				result = append(result, packet)
+				break
+			}
+		}
+	}
+
+	return result
+}

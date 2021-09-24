@@ -15,13 +15,23 @@ func NotesRoutes(route *gin.Engine) {
 		users.GET("/notes", getNotesInProject)
 		users.POST("/notes", createNewNote)
 		users.PUT("/notes/:noteId", updateNote)
+		users.DELETE("/notes/:noteId", deleteNote)
 	}
 }
 
 func getNotesInProject(c *gin.Context) {
 	var noteDb database.INoteDatabase = new(database.NoteDatabase).Init()
-	users := noteDb.GetNotes(c.Param("projectName"))
-	responser.ResponseOk(c, users)
+	projectName := c.Param("projectName")
+	notes := noteDb.GetNotes(projectName)
+
+	var packetsDb database.IPacketDatabase = new(database.PacketDatabase).Init()
+	packets := packetsDb.GetPacketsByNotes(projectName, notes)
+
+	result := make(map[string]interface{})
+	result["notes"] = notes
+	result["packets"] = packets
+
+	responser.ResponseOk(c, result)
 }
 
 func createNewNote(c *gin.Context) {
@@ -56,4 +66,18 @@ func updateNote(c *gin.Context) {
 		return
 	}
 	responser.ResponseOk(c, "Successfully update note")
+}
+
+func deleteNote(c *gin.Context) {
+	id, err := primitive.ObjectIDFromHex(c.Param("noteId"))
+	if err != nil {
+		responser.ResponseError(c, err)
+		return
+	}
+	var noteDb database.INoteDatabase = new(database.NoteDatabase).Init()
+	if err := noteDb.DeleteById(id); err != nil {
+		responser.ResponseError(c, err)
+		return
+	}
+	responser.ResponseOk(c, "Successfully delete note")
 }

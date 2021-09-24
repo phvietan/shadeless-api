@@ -5,12 +5,11 @@ import "github.com/kamva/mgm/v3"
 type Note struct {
 	mgm.DefaultModel `bson:",inline"`
 
-	Project         string  `json:"project" bson:"project"`
-	CodeName        string  `json:"codeName" bson:"codeName"`
-	RequestPacketId string  `json:"requestPacketId" bson:"requestPacketId"`
-	Tags            string  `json:"tags"`
-	Description     string  `json:"description"`
-	Replies         []Reply `json:"replies" bson:"replies"`
+	Project         string `json:"project" bson:"project"`
+	CodeName        string `json:"codeName" bson:"codeName"`
+	RequestPacketId string `json:"requestPacketId" bson:"requestPacketId"`
+	Tags            string `json:"tags"`
+	Description     string `json:"description"`
 }
 
 type Reply struct {
@@ -24,6 +23,5 @@ func NewNote() *Note {
 		RequestPacketId: "",
 		Tags:            "",
 		Description:     "",
-		Replies:         []Reply{},
 	}
 }

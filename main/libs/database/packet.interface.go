@@ -8,4 +8,5 @@ type IPacketDatabase interface {
 	Init() *PacketDatabase
 	GetPacketByPacketId(projectName string, packetId string) *schema.Packet
 	GetPacketsAsTimeTravel(projectName string, packetPrefix string, packetIndex int, number int) []schema.Packet
+	GetPacketsByNotes(project string, notes []schema.Note) []schema.Packet
 }
