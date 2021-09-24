@@ -82,7 +82,7 @@ func (this *ParsedPacket) ParseFromPacket(packet *Packet) (*ParsedPacket, error)
 		return nil, err
 	}
 	result.Fuzzed = makeDefaultFuzzMap()
-	result.Hash = CalculatePacketHash(this.ResponseStatus, this.Origin, this.Path, this.Parameters)
+	result.Hash = CalculatePacketHash(result.ResponseStatus, result.Origin, result.Path, result.Parameters)
 	result.setStaticScore()
 	return result, nil
 }
@@ -102,5 +102,8 @@ func CalculatePacketHash(responseStatus int, origin string, path string, paramet
 		s += val + delimiter
 	}
 	b := md5.Sum([]byte(s))
+	fmt.Println(s, b[:])
+	// fmt.Println(parsedPacket.Project, parsedPacket.Origin, parsedPacket.Path, parsedPacket.Hash)
+
 	return hex.EncodeToString(b[:])
 }
