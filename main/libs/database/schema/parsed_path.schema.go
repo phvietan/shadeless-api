@@ -48,6 +48,9 @@ func GetPathsFromParsedPacket(packet *ParsedPacket) ([]ParsedPath, error) {
 		if idx == len(paths)-1 && path == "" {
 			continue
 		}
+		if idx == len(paths)-1 && packet.StaticScore > 50 {
+			continue
+		}
 		curPath += path + "/"
 		result = append(result, *NewParsedPath(packet, curPath))
 	}

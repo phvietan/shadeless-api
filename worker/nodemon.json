@@ -1,0 +1,9 @@
+{
+  "ext": "ts",
+  "watch": ["."],
+  "exec": "ts-node index.ts",
+  "ignore": [
+    "node_modules"
+  ],
+  "restartable": "rs"
+}
