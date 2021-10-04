@@ -30,6 +30,9 @@ func (this *StaticScorer) GetScore() float64 {
 	if strings.Contains(p.ResponseContentType, "text/html") {
 		score -= 30
 	}
+	if p.Method != "GET" && p.Method != "HEAD" {
+		score -= 30
+	}
 
 	// Extension that looks like static
 	extension := filepath.Ext(p.Path)

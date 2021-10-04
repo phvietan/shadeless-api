@@ -8,6 +8,12 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
+type IFileDatabase interface {
+	IDatabase
+	Init() *FileDatabase
+	GetFileByProjectAndId(project string, id string) *schema.File
+}
+
 type FileDatabase struct {
 	Database
 }

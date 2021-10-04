@@ -14,6 +14,15 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+type IDatabase interface {
+	Insert(row mgm.Model) error
+	InsertMany(rows []interface{}) error
+	ClearCollection()
+	UpdateOneProperty(propertyKey string, propertyOldValue interface{}, propertyNewValue interface{}) error
+	DeleteByOneProperty(propertyKey string, propertyValue interface{}) error
+	DeleteById(id primitive.ObjectID) error
+}
+
 type Database struct {
 	ctx context.Context
 	db  *mgm.Collection
@@ -24,6 +33,11 @@ func (this *Database) Insert(row mgm.Model) error {
 		return errors.New("Object to insert to mongo is nil")
 	}
 	return this.db.CreateWithCtx(this.ctx, row)
+}
+
+func (this *Database) InsertMany(rows []interface{}) error {
+	_, err := this.db.InsertMany(this.ctx, rows)
+	return err
 }
 
 func (this *Database) UpdateOneProperty(propertyKey string, propertyOldValue interface{}, propertyNewValue interface{}) error {

@@ -58,7 +58,24 @@ func insertToDb(packet *schema.Packet, parsedPacket *schema.ParsedPacket) error 
 
 	// Parsed packet
 	var parsedPacketDb database.IParsedPacketDatabase = new(database.ParsedPacketDatabase).Init()
-	return parsedPacketDb.Upsert(parsedPacket)
+	if err := parsedPacketDb.Upsert(parsedPacket); err != nil {
+		return err
+	}
+
+	// Parsed path
+	parsedPaths, err := schema.GetPathsFromParsedPacket(parsedPacket)
+	if err != nil {
+		return err
+	}
+	iparsedPath := make([]interface{}, len(parsedPaths))
+	for i, p := range parsedPaths {
+		iparsedPath[i] = p
+	}
+	var parsedPathDb database.IParsedPathDatabase = new(database.ParsedPathDatabase).Init()
+	if err := parsedPathDb.InsertMany(iparsedPath); err != nil {
+		fmt.Println("Error: ", err)
+	}
+	return nil
 }
 
 func postPackets(c *gin.Context) {

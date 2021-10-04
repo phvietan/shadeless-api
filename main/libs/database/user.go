@@ -11,6 +11,14 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+type IUserDatabase interface {
+	IDatabase
+	Init() *UserDatabase
+	GetUsers(project string) []schema.User
+	GetUserByProjectAndCodename(project string, codename string) *schema.User
+	Upsert(project string, codeName string)
+}
+
 type UserDatabase struct {
 	Database
 }

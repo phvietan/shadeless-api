@@ -10,6 +10,14 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+type INoteDatabase interface {
+	IDatabase
+	Init() *NoteDatabase
+	GetNotes(project string) []schema.Note
+	UpdateOne(id primitive.ObjectID, newNote *schema.Note) error
+	GetNotesByPackets(project string, packets []schema.Packet) []*schema.Note
+}
+
 type NoteDatabase struct {
 	Database
 }

@@ -8,6 +8,15 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
+type IPacketDatabase interface {
+	IDatabase
+
+	Init() *PacketDatabase
+	GetPacketByPacketId(projectName string, packetId string) *schema.Packet
+	GetPacketsAsTimeTravel(projectName string, packetPrefix string, packetIndex int, number int) []schema.Packet
+	GetPacketsByNotes(project string, notes []schema.Note) []schema.Packet
+}
+
 type PacketDatabase struct {
 	Database
 }
@@ -59,7 +68,6 @@ func (this *PacketDatabase) GetPacketsByNotes(project string, notes []schema.Not
 	for _, note := range notes {
 		packetsId = append(packetsId, note.RequestPacketId)
 	}
-	fmt.Println(packetsId)
 	pipeline := []bson.M{
 		bson.M{
 			"$match": bson.M{

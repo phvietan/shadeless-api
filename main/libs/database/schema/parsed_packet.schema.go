@@ -102,8 +102,5 @@ func CalculatePacketHash(responseStatus int, origin string, path string, paramet
 		s += val + delimiter
 	}
 	b := md5.Sum([]byte(s))
-	fmt.Println(s, b[:])
-	// fmt.Println(parsedPacket.Project, parsedPacket.Origin, parsedPacket.Path, parsedPacket.Hash)
-
 	return hex.EncodeToString(b[:])
 }

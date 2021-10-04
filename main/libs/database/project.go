@@ -10,6 +10,18 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+type IProjectDatabase interface {
+	IDatabase
+
+	Init() *ProjectDatabase
+
+	GetProjects() []schema.Project
+	GetOneProjectById(id primitive.ObjectID) *schema.Project
+	GetOneProjectByName(name string) *schema.Project
+
+	UpdateProject(id primitive.ObjectID, project *schema.Project) error
+	UpdateProjectStatus(id primitive.ObjectID, newStatus string) error
+}
 type ProjectDatabase struct {
 	Database
 }
