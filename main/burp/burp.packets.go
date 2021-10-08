@@ -67,13 +67,12 @@ func insertToDb(packet *schema.Packet, parsedPacket *schema.ParsedPacket) error 
 	if err != nil {
 		return err
 	}
-	iparsedPath := make([]interface{}, len(parsedPaths))
-	for i, p := range parsedPaths {
-		iparsedPath[i] = p
-	}
 	var parsedPathDb database.IParsedPathDatabase = new(database.ParsedPathDatabase).Init()
-	if err := parsedPathDb.InsertMany(iparsedPath); err != nil {
-		fmt.Println("Error: ", err)
+	for _, p := range parsedPaths {
+		if err := parsedPathDb.Upsert(&p); err != nil {
+			fmt.Println("Error: ", err)
+			return err
+		}
 	}
 	return nil
 }

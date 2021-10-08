@@ -25,6 +25,7 @@ func Routes(route *gin.Engine) {
 	}
 
 	PacketsRoutes(route)
+	PathsRoutes(route)
 	NotesRoutes(route)
 	UsersRoutes(route)
 }
@@ -135,6 +136,12 @@ func putProject(c *gin.Context) {
 			return
 		}
 
+		var parsedPathDb database.IParsedPathDatabase = new(database.ParsedPathDatabase).Init()
+		if err = parsedPathDb.UpdateOneProperty("project", dbProject.Name, newProject.Name); err != nil {
+			responser.ResponseError(c, err)
+			return
+		}
+
 		var fileDb database.IFileDatabase = new(database.FileDatabase).Init()
 		if err = fileDb.UpdateOneProperty("project", dbProject.Name, newProject.Name); err != nil {
 			responser.ResponseError(c, err)
@@ -195,6 +202,11 @@ func deleteProjects(c *gin.Context) {
 		}
 		var parsedPacketDb database.IParsedPacketDatabase = new(database.ParsedPacketDatabase).Init()
 		if err := parsedPacketDb.DeleteByOneProperty("project", project.Name); err != nil {
+			responser.ResponseError(c, err)
+			return
+		}
+		var parsedPathDb database.IParsedPathDatabase = new(database.ParsedPathDatabase).Init()
+		if err = parsedPathDb.DeleteByOneProperty("project", project.Name); err != nil {
 			responser.ResponseError(c, err)
 			return
 		}

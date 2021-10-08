@@ -1,11 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"shadeless-api/main/burp"
 	"shadeless-api/main/config"
 	"shadeless-api/main/projects"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -30,10 +28,6 @@ func spawnApp() *gin.Engine {
 }
 
 func main() {
-	s := "/"
-	a := strings.Split(s, "/")
-	fmt.Println(a, len(a))
-
 	router := spawnApp()
 	router.Run(config.GetInstance().GetBindAddress()) // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }

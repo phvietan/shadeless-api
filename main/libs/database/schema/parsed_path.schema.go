@@ -2,7 +2,6 @@ package schema
 
 import (
 	"errors"
-	"fmt"
 	"strings"
 	"time"
 
@@ -16,6 +15,9 @@ type ParsedPath struct {
 	Path             string `json:"path"`
 	Status           string `json:"status"`
 	Project          string `json:"project"`
+	Type             string `json:"type" bson:"type"`
+	Force            bool   `json:"force" bson:"force"`
+	Error            string `json:"error" bson:"error"`
 }
 
 const (
@@ -24,13 +26,21 @@ const (
 	PathStatusDone     = "done"
 )
 
-func NewParsedPath(packet *ParsedPacket, path string) *ParsedPath {
+const (
+	PathTypeFile      = "file"
+	PathTypeDirectory = "directory"
+)
+
+func NewParsedPath(packet *ParsedPacket, path string, pathType string) *ParsedPath {
 	res := &ParsedPath{
 		Project:         packet.Project,
 		Origin:          packet.Origin,
 		Path:            path,
 		Status:          PathStatusTodo,
 		RequestPacketId: packet.RequestPacketId,
+		Type:            pathType,
+		Force:           false,
+		Error:           "",
 	}
 	res.DefaultModel.CreatedAt = time.Now()
 	res.DefaultModel.UpdatedAt = time.Now()
@@ -48,12 +58,12 @@ func GetPathsFromParsedPacket(packet *ParsedPacket) ([]ParsedPath, error) {
 		if idx == len(paths)-1 && path == "" {
 			continue
 		}
+		t := PathTypeDirectory
 		if idx == len(paths)-1 && packet.StaticScore > 50 {
-			continue
+			t = PathTypeFile
 		}
 		curPath += path + "/"
-		result = append(result, *NewParsedPath(packet, curPath))
+		result = append(result, *NewParsedPath(packet, curPath, t))
 	}
-	fmt.Println(result)
 	return result, nil
 }

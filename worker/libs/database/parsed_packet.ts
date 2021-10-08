@@ -1,27 +1,30 @@
 import { Collection, Db } from 'mongodb';
 
-export interface ParsedPacket {
+export interface ParsedPacketRequest {
+  method: string;
+  project: string;
+  requestBodyHash: string;
+  requestHeaders: string[];
+  origin: string;
+  path: string;
+  querystring: string;
+}
+export interface ParsedPacket extends ParsedPacketRequest {
   _id?: string;
   requestPacketId: string;
   requestPacketPrefix: string;
   requestPacketIndex: number;
 
   toolName: string;
-  method: string
   requestLength: number;
   requestHttpVersion: string;
   requestContentType: string;
   referer: string;
   protocol: string;
-  origin: string;
   port: number;
-  path: string;
   requestCookies: string;
   hasBodyParam: boolean;
-  querystring: string;
-  requestBodyHash: string;
   parameters: string[];
-  requestHeaders: string[];
 
   responseStatus: number;
   responseContentType: string;
@@ -61,7 +64,7 @@ class ParsedPacketDb {
 
   async getOneByRequestId(requestPacketId: string) {
     const document = await this.db.findOne({ requestPacketId });
-    if (!document) return null;
+    if (!document) return undefined;
     return (document as any) as ParsedPacket;
   }
 }

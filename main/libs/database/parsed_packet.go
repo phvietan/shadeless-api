@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"shadeless-api/main/libs"
 	"shadeless-api/main/libs/database/schema"
-	"shadeless-api/main/libs/finder"
 
 	"github.com/kamva/mgm/v3"
 	"go.mongodb.org/mongo-driver/bson"
@@ -17,7 +16,7 @@ type IParsedPacketDatabase interface {
 	Init() *ParsedPacketDatabase
 	Upsert(packet *schema.ParsedPacket) error
 	GetMetadataByProject(project *schema.Project) ([]string, []string, map[string]string)
-	GetPacketsByOriginAndProject(projectName string, origin string, options *finder.FinderOptions) []schema.ParsedPacket
+	GetPacketsByOriginAndProject(projectName string, origin string) []schema.ParsedPacket
 	GetParsedByRawPackets(project string, packets []schema.Packet) []schema.ParsedPacket
 }
 
@@ -111,13 +110,9 @@ func (this *ParsedPacketDatabase) GetMetadataByProject(project *schema.Project) 
 	return origins, parameters, reflectedParameters
 }
 
-func (this *ParsedPacketDatabase) GetPacketsByOriginAndProject(projectName string, origin string, options *finder.FinderOptions) []schema.ParsedPacket {
+func (this *ParsedPacketDatabase) GetPacketsByOriginAndProject(projectName string, origin string) []schema.ParsedPacket {
 	pipeline := []bson.M{
 		bson.M{"$match": bson.M{"origin": origin, "project": projectName}},
-		bson.M{"$group": bson.M{"_id": "$hash", "doc": bson.M{"$last": "$$ROOT"}}},
-		bson.M{"$replaceRoot": bson.M{"newRoot": "$doc"}},
-		bson.M{"$skip": options.Skip},
-		bson.M{"$limit": options.Limit},
 	}
 
 	cursor, err := this.db.Aggregate(this.ctx, pipeline)
@@ -138,6 +133,7 @@ func (this *ParsedPacketDatabase) GetParsedByRawPackets(project string, packets 
 	packetsHash := []string{}
 	for _, p := range packets {
 		packetsHash = append(packetsHash, schema.CalculatePacketHash(
+			p.Method,
 			p.ResponseStatus,
 			p.Origin,
 			p.Path,

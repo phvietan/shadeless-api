@@ -1,7 +1,7 @@
 {
   "ext": "ts",
   "watch": ["."],
-  "exec": "ts-node index.ts",
+  "exec": "ts-node index.ts --project ./tsconfig.json",
   "ignore": [
     "node_modules"
   ],

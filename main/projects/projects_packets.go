@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"shadeless-api/main/libs/database"
-	"shadeless-api/main/libs/finder"
 	"shadeless-api/main/libs/responser"
 	"strconv"
 	"strings"
@@ -64,14 +63,8 @@ func getPacketsByOrigin(c *gin.Context) {
 	projectName := c.Param("projectName")
 	origin := c.Query("origin")
 
-	options := new(finder.FinderOptions)
-	if err := c.BindQuery(options); err != nil {
-		responser.ResponseError(c, err)
-		return
-	}
-
 	var packetDb database.IParsedPacketDatabase = new(database.ParsedPacketDatabase).Init()
-	packets := packetDb.GetPacketsByOriginAndProject(projectName, origin, options)
+	packets := packetDb.GetPacketsByOriginAndProject(projectName, origin)
 	responser.ResponseOk(c, packets)
 }
 
