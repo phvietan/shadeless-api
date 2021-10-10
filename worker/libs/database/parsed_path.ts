@@ -5,6 +5,11 @@ export enum PathStatus {
   SCANNING = 'scanning',
   DONE = 'done',
 }
+export enum PathType {
+  FILE = 'file',
+  FOLDER = 'folder',
+};
+
 export interface ParsedPath {
   _id?: string;
   requestPacketId: string;
@@ -15,6 +20,7 @@ export interface ParsedPath {
   force: boolean;
   created_at?: Date;
   updated_at?: Date;
+  type: PathType;
   error: string;
 }
 

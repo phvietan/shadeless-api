@@ -91,9 +91,6 @@ class PathFilter {
     console.log(`${prefixLog}: After filter 404 status code, ${this.qualified.length}/${this.responses.length}`)
     this.filterDominantStatusCode();
     console.log(`${prefixLog}: After filter dominant status code, ${this.qualified.length}/${this.responses.length}`)
-    this.responses.forEach(r => {
-      console.log(`${r.config.baseURL}${r.config.url}`);
-    })
     this.filterSimilar404();
     console.log(`${prefixLog}: After filter 404 similarity, ${this.qualified.length}`)
     this.filterCaptcha();

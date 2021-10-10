@@ -53,28 +53,34 @@ func insertToDb(packet *schema.Packet, parsedPacket *schema.ParsedPacket) error 
 	if err := packetDb.Insert(packet); err != nil {
 		return err
 	}
+	var errUser, errParsedPacket, errParsedPath error
 	var userDb database.IUserDatabase = new(database.UserDatabase).Init()
-	userDb.Upsert(packet.Project, packet.CodeName)
+	errUser = userDb.Upsert(packet.Project, packet.CodeName)
 
 	// Parsed packet
 	var parsedPacketDb database.IParsedPacketDatabase = new(database.ParsedPacketDatabase).Init()
-	if err := parsedPacketDb.Upsert(parsedPacket); err != nil {
-		return err
+	if errParsedPacket = parsedPacketDb.Upsert(parsedPacket); errParsedPacket != nil {
+		fmt.Println("Error: ", errParsedPacket)
 	}
 
 	// Parsed path
-	parsedPaths, err := schema.GetPathsFromParsedPacket(parsedPacket)
-	if err != nil {
-		return err
+	parsedPaths, errParsedPath := schema.GetPathsFromParsedPacket(parsedPacket)
+	if errParsedPath != nil {
+		fmt.Println("Error: ", errParsedPath)
 	}
 	var parsedPathDb database.IParsedPathDatabase = new(database.ParsedPathDatabase).Init()
 	for _, p := range parsedPaths {
-		if err := parsedPathDb.Upsert(&p); err != nil {
-			fmt.Println("Error: ", err)
-			return err
+		if errParsedPath = parsedPathDb.Upsert(&p); errParsedPath != nil {
+			fmt.Println("Error: ", errParsedPath)
 		}
 	}
-	return nil
+	if errUser != nil {
+		return errUser
+	}
+	if errParsedPacket != nil {
+		return errParsedPacket
+	}
+	return errParsedPath
 }
 
 func postPackets(c *gin.Context) {

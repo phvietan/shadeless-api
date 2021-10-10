@@ -16,7 +16,7 @@ type IParsedPathDatabase interface {
 	IDatabase
 
 	Init() *ParsedPathDatabase
-	GetPathsByProject(project string) []schema.ParsedPath
+	GetPathsByProjectAndOrigin(project string, origin string) []schema.ParsedPath
 	Upsert(parsedPath *schema.ParsedPath) error
 }
 
@@ -43,9 +43,9 @@ func (this *ParsedPathDatabase) Init() *ParsedPathDatabase {
 	return this
 }
 
-func (this *ParsedPathDatabase) GetPathsByProject(project string) []schema.ParsedPath {
+func (this *ParsedPathDatabase) GetPathsByProjectAndOrigin(project string, origin string) []schema.ParsedPath {
 	pipeline := []bson.M{
-		bson.M{"$match": bson.M{"project": project}},
+		bson.M{"$match": bson.M{"project": project, "origin": origin}},
 	}
 
 	cursor, err := this.db.Aggregate(this.ctx, pipeline)
@@ -70,7 +70,7 @@ func (this *ParsedPathDatabase) Upsert(parsedPath *schema.ParsedPath) error {
 	result := &schema.ParsedPacket{}
 	if err := this.db.FirstWithCtx(
 		this.ctx,
-		bson.M{"origin": parsedPath.Origin, "project": parsedPath.Project},
+		bson.M{"origin": parsedPath.Origin, "project": parsedPath.Project, "path": parsedPath.Path},
 		result,
 	); err != nil {
 		// If not found, then insert
@@ -78,8 +78,12 @@ func (this *ParsedPathDatabase) Upsert(parsedPath *schema.ParsedPath) error {
 		return this.Insert(parsedPath)
 	}
 	// If found, then update requestPacketId
+	fmt.Println("Why found? ", parsedPath.Origin, parsedPath.Path, result.ID)
 	_, err := this.db.UpdateByID(this.ctx, result.ID, bson.M{
-		"$set": bson.M{"requestPacketId": parsedPath.RequestPacketId},
+		"$set": bson.M{
+			"type":            parsedPath.Type,
+			"requestPacketId": parsedPath.RequestPacketId,
+		},
 	})
 	return err
 }

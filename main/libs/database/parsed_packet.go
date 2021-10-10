@@ -3,11 +3,14 @@ package database
 import (
 	"errors"
 	"fmt"
+	"os"
 	"shadeless-api/main/libs"
 	"shadeless-api/main/libs/database/schema"
 
 	"github.com/kamva/mgm/v3"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type IParsedPacketDatabase interface {
@@ -27,6 +30,18 @@ type ParsedPacketDatabase struct {
 func (this *ParsedPacketDatabase) Init() *ParsedPacketDatabase {
 	this.ctx = mgm.Ctx()
 	this.db = mgm.Coll(&schema.ParsedPacket{})
+	mod := mongo.IndexModel{
+		Keys: bson.D{
+			{"project", 1},
+			{"hash", 1},
+		},
+		Options: options.Index().SetUnique(true),
+	}
+	_, err := this.db.Indexes().CreateOne(this.ctx, mod)
+	if err != nil {
+		fmt.Println("Error when creating index, ", err)
+		os.Exit(0)
+	}
 	return this
 }
 

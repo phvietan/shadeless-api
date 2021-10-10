@@ -16,7 +16,9 @@ func PathsRoutes(route *gin.Engine) {
 
 func getPathsByOrigin(c *gin.Context) {
 	projectName := c.Param("projectName")
+	origin := c.Query("origin")
+
 	var pathDb database.IParsedPathDatabase = new(database.ParsedPathDatabase).Init()
-	paths := pathDb.GetPathsByProject(projectName)
+	paths := pathDb.GetPathsByProjectAndOrigin(projectName, origin)
 	responser.ResponseOk(c, paths)
 }
