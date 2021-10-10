@@ -16,7 +16,7 @@ type IUserDatabase interface {
 	Init() *UserDatabase
 	GetUsers(project string) []schema.User
 	GetUserByProjectAndCodename(project string, codename string) *schema.User
-	Upsert(project string, codeName string)
+	Upsert(project string, codeName string) error
 }
 
 type UserDatabase struct {
@@ -64,9 +64,10 @@ func (this *UserDatabase) GetUserByProjectAndCodename(project string, codeName s
 	return user
 }
 
-func (this *UserDatabase) Upsert(project string, codeName string) {
+func (this *UserDatabase) Upsert(project string, codeName string) error {
 	user := this.GetUserByProjectAndCodename(project, codeName)
 	if user == nil {
-		this.Insert(schema.NewUser(project, codeName))
+		return this.Insert(schema.NewUser(project, codeName))
 	}
+	return nil
 }

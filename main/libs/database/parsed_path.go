@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"shadeless-api/main/libs"
 	"shadeless-api/main/libs/database/schema"
 
 	"github.com/kamva/mgm/v3"
@@ -17,6 +18,7 @@ type IParsedPathDatabase interface {
 
 	Init() *ParsedPathDatabase
 	GetPathsByProjectAndOrigin(project string, origin string) []schema.ParsedPath
+	GetMetadataByProject(project *schema.Project) ([]string, int, int, int, string)
 	Upsert(parsedPath *schema.ParsedPath) error
 }
 
@@ -43,11 +45,49 @@ func (this *ParsedPathDatabase) Init() *ParsedPathDatabase {
 	return this
 }
 
+// Get origins, num paths, num scanned, num found, who is bot scanning
+func (this *ParsedPathDatabase) GetMetadataByProject(project *schema.Project) ([]string, int, int, int, string) {
+	if project == nil {
+		fmt.Println("Error ParsedPath.GetMetadataByProject: project is nil")
+		return []string{}, 0, 0, 0, ""
+	}
+	filter := parseFilterOptionsFromProject(project)
+	resultOrigins, err := this.db.Distinct(this.ctx, "origin", filter)
+	if err != nil {
+		fmt.Println("Error ParsedPath.GetMetadataByProject:", err)
+		return []string{}, 0, 0, 0, ""
+	}
+	origins := libs.ArrayInterfaceToArrayString(resultOrigins)
+
+	numPaths, err := this.db.CountDocuments(this.ctx, filter)
+	if err != nil {
+		fmt.Println("Error ParsedPath.GetMetadataByProject", err)
+		return []string{}, 0, 0, 0, ""
+	}
+	filter["requestPacketId"] = ""
+	numFound, err := this.db.CountDocuments(this.ctx, filter)
+	if err != nil {
+		fmt.Println("Error ParsedPath.GetMetadataByProject", err)
+		return []string{}, 0, 0, 0, ""
+	}
+	delete(filter, "requestPacketId")
+
+	filter["status"] = schema.PathStatusDone
+	numScanned, err := this.db.CountDocuments(this.ctx, filter)
+	if err != nil {
+		fmt.Println("Error ParsedPath.GetMetadataByProject2", err)
+		return []string{}, 0, 0, 0, ""
+	}
+	botScanning := &schema.ParsedPath{}
+	filter["status"] = schema.PathStatusScanning
+	this.db.FirstWithCtx(this.ctx, filter, botScanning)
+	return origins, int(numPaths), int(numScanned), int(numFound), botScanning.Origin + botScanning.Path
+}
+
 func (this *ParsedPathDatabase) GetPathsByProjectAndOrigin(project string, origin string) []schema.ParsedPath {
 	pipeline := []bson.M{
 		bson.M{"$match": bson.M{"project": project, "origin": origin}},
 	}
-
 	cursor, err := this.db.Aggregate(this.ctx, pipeline)
 	if err != nil {
 		fmt.Println("Error GetPacketsByOriginAndProject1", err)
@@ -78,7 +118,6 @@ func (this *ParsedPathDatabase) Upsert(parsedPath *schema.ParsedPath) error {
 		return this.Insert(parsedPath)
 	}
 	// If found, then update requestPacketId
-	fmt.Println("Why found? ", parsedPath.Origin, parsedPath.Path, result.ID)
 	_, err := this.db.UpdateByID(this.ctx, result.ID, bson.M{
 		"$set": bson.M{
 			"type":            parsedPath.Type,
