@@ -14,13 +14,13 @@ func healthCheckHandler(c *gin.Context) {
 
 func spawnApp() *gin.Engine {
 	router := gin.Default()
-	router.GET("/healthcheck", healthCheckHandler)
 
 	router.Use(setHeaderOctetStream())
 	router.Static("/files", "./files")
 
 	router.Use(setHeaderForApi())
 	router.Use(handleOptionsMethod())
+	router.GET("/healthcheck", healthCheckHandler)
 
 	burp.Routes(router)
 	projects.Routes(router)

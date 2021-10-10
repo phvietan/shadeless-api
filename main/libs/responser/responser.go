@@ -31,6 +31,15 @@ func ResponseOk(c *gin.Context, data interface{}) {
 	c.JSON(http.StatusOK, response)
 }
 
+func Response404(c *gin.Context, err string) {
+	response := responseBody{
+		StatusCode: http.StatusNotFound,
+		Data:       nil,
+		Error:      err,
+	}
+	c.JSON(http.StatusNotFound, response)
+}
+
 func ResponseError(c *gin.Context, err error) {
 	fmt.Errorf("Error at %s: %v", c.FullPath(), err)
 	response := responseBody{

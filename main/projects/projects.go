@@ -2,7 +2,10 @@ package projects
 
 import (
 	"errors"
+	"log"
+	"os"
 	"shadeless-api/main/libs/database"
+	"shadeless-api/main/libs/database/schema"
 	"shadeless-api/main/libs/responser"
 
 	"github.com/gin-gonic/gin"
@@ -14,10 +17,17 @@ func Routes(route *gin.Engine) {
 	{
 		projects.GET("/", getProjects)
 		projects.POST("/", postProjects)
-		projects.PUT("/:id", putProjects)
-		projects.DELETE("/:id", deleteProjects)
+		// Actually 3 endpoints below are objectId of mongo. Because of stupid of Gin gonic, I must name it projectName here
+		// See more at: https://github.com/gin-gonic/gin/issues/1301#issuecomment-392346179
+		projects.PUT("/:projectName", putProject)
+		projects.PUT("/:projectName/status", putProjectStatus)
+		projects.DELETE("/:projectName", deleteProjects)
 	}
-	ProjectPacketRoutes(route)
+
+	PacketsRoutes(route)
+	PathsRoutes(route)
+	NotesRoutes(route)
+	UsersRoutes(route)
 }
 
 func getProjects(c *gin.Context) {
@@ -33,8 +43,13 @@ func isProjectExist(name string) bool {
 }
 
 func postProjects(c *gin.Context) {
-	project := database.NewProject()
+	project := schema.NewProject()
 	if err := c.BindJSON(project); err != nil {
+		responser.ResponseError(c, err)
+		return
+	}
+
+	if err := project.Validate(); err != nil {
 		responser.ResponseError(c, err)
 		return
 	}
@@ -45,21 +60,50 @@ func postProjects(c *gin.Context) {
 	}
 
 	var projectDb database.IProjectDatabase = new(database.ProjectDatabase).Init()
-	if err := projectDb.CreateProject(project); err != nil {
+	if err := projectDb.Insert(project); err != nil {
 		responser.ResponseError(c, err)
 		return
 	}
 	responser.ResponseOk(c, "Successfully create project")
 }
 
-func putProjects(c *gin.Context) {
-	newProject := database.NewProject()
-	if err := c.BindJSON(newProject); err != nil {
+func putProjectStatus(c *gin.Context) {
+	type status struct {
+		Status string `json:"status"`
+	}
+	newStatus := new(status)
+	if err := c.BindJSON(newStatus); err != nil {
 		responser.ResponseError(c, err)
 		return
 	}
 
-	id, err := primitive.ObjectIDFromHex(c.Param("id"))
+	id, err := primitive.ObjectIDFromHex(c.Param("projectName"))
+	if err != nil {
+		responser.ResponseError(c, err)
+		return
+	}
+
+	var projectDb database.IProjectDatabase = new(database.ProjectDatabase).Init()
+	if err = projectDb.UpdateProjectStatus(id, newStatus.Status); err != nil {
+		responser.ResponseError(c, err)
+		return
+	}
+
+	responser.ResponseOk(c, "Successfully update project status")
+}
+
+func putProject(c *gin.Context) {
+	newProject := schema.NewProject()
+	if err := c.BindJSON(newProject); err != nil {
+		responser.ResponseError(c, err)
+		return
+	}
+	if err := newProject.Validate(); err != nil {
+		responser.ResponseError(c, err)
+		return
+	}
+
+	id, err := primitive.ObjectIDFromHex(c.Param("projectName"))
 	if err != nil {
 		responser.ResponseError(c, err)
 		return
@@ -78,6 +122,37 @@ func putProjects(c *gin.Context) {
 		responser.ResponseError(c, err)
 		return
 	}
+
+	if dbProject.Name != newProject.Name {
+		var packetDb database.IPacketDatabase = new(database.PacketDatabase).Init()
+		if err = packetDb.UpdateOneProperty("project", dbProject.Name, newProject.Name); err != nil {
+			responser.ResponseError(c, err)
+			return
+		}
+
+		var parsedPacketDb database.IParsedPacketDatabase = new(database.ParsedPacketDatabase).Init()
+		if err = parsedPacketDb.UpdateOneProperty("project", dbProject.Name, newProject.Name); err != nil {
+			responser.ResponseError(c, err)
+			return
+		}
+
+		var parsedPathDb database.IParsedPathDatabase = new(database.ParsedPathDatabase).Init()
+		if err = parsedPathDb.UpdateOneProperty("project", dbProject.Name, newProject.Name); err != nil {
+			responser.ResponseError(c, err)
+			return
+		}
+
+		var fileDb database.IFileDatabase = new(database.FileDatabase).Init()
+		if err = fileDb.UpdateOneProperty("project", dbProject.Name, newProject.Name); err != nil {
+			responser.ResponseError(c, err)
+			return
+		}
+		err = os.Rename("./files/"+dbProject.Name, "./files/"+newProject.Name)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
 	responser.ResponseOk(c, "Successfully update project")
 }
 
@@ -92,7 +167,7 @@ func deleteProjects(c *gin.Context) {
 		return
 	}
 
-	id, err := primitive.ObjectIDFromHex(c.Param("id"))
+	id, err := primitive.ObjectIDFromHex(c.Param("projectName"))
 	if err != nil {
 		responser.ResponseError(c, err)
 		return
@@ -105,16 +180,46 @@ func deleteProjects(c *gin.Context) {
 		return
 	}
 
-	if err = projectDb.DeleteProject(id); err != nil {
+	if err = projectDb.DeleteById(id); err != nil {
 		responser.ResponseError(c, err)
 		return
 	}
 	if option.All == true {
+		var userDb database.IUserDatabase = new(database.UserDatabase).Init()
+		if err := userDb.DeleteByOneProperty("project", project.Name); err != nil {
+			responser.ResponseError(c, err)
+			return
+		}
+		var noteDb database.INoteDatabase = new(database.NoteDatabase).Init()
+		if err := noteDb.DeleteByOneProperty("project", project.Name); err != nil {
+			responser.ResponseError(c, err)
+			return
+		}
 		var packetDb database.IPacketDatabase = new(database.PacketDatabase).Init()
-		if err := packetDb.DeletePacketsByProjectName(project.Name); err != nil {
+		if err := packetDb.DeleteByOneProperty("project", project.Name); err != nil {
+			responser.ResponseError(c, err)
+			return
+		}
+		var parsedPacketDb database.IParsedPacketDatabase = new(database.ParsedPacketDatabase).Init()
+		if err := parsedPacketDb.DeleteByOneProperty("project", project.Name); err != nil {
+			responser.ResponseError(c, err)
+			return
+		}
+		var parsedPathDb database.IParsedPathDatabase = new(database.ParsedPathDatabase).Init()
+		if err = parsedPathDb.DeleteByOneProperty("project", project.Name); err != nil {
+			responser.ResponseError(c, err)
+			return
+		}
+		var fileDb database.IFileDatabase = new(database.FileDatabase).Init()
+		if err := fileDb.DeleteByOneProperty("project", project.Name); err != nil {
+			responser.ResponseError(c, err)
+			return
+		}
+		err := os.RemoveAll("./files/" + project.Name)
+		if err != nil {
 			responser.ResponseError(c, err)
 			return
 		}
 	}
-	responser.ResponseJson(c, 200, "Successfully delete project", "")
+	responser.ResponseOk(c, "Successfully delete project")
 }

@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 	"shadeless-api/main/libs/database"
+	"shadeless-api/main/libs/database/schema"
 	"shadeless-api/main/libs/responser"
 
 	"github.com/gin-gonic/gin"
@@ -35,8 +36,8 @@ func uploadFile(c *gin.Context) {
 
 	var fileDatabase database.IFileDatabase = new(database.FileDatabase).Init()
 	if fileInDb := fileDatabase.GetFileByProjectAndId(project, id); fileInDb == nil {
-		newFileDB := database.NewFile(project, id)
-		if err := fileDatabase.CreateFile(newFileDB); err != nil {
+		newFileDB := schema.NewFile(project, id)
+		if err := fileDatabase.Insert(newFileDB); err != nil {
 			responser.ResponseError(c, err)
 			return
 		}
