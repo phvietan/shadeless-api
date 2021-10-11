@@ -82,15 +82,17 @@ func parseFilterOptionsFromProject(project *schema.Project) bson.M {
 		filter = bson.M{
 			"project": project.Name,
 			"origin": bson.M{
-				"$nin": blacklistExact,
-				"$not": bson.M{"$regex": blacklistRegex},
+				"$nin":   blacklistExact,
+				"$not":   bson.M{"$regex": blacklistRegex},
+				"$regex": project.Whitelist,
 			},
 		}
 	} else {
 		filter = bson.M{
 			"project": project.Name,
 			"origin": bson.M{
-				"$nin": blacklistExact,
+				"$nin":   blacklistExact,
+				"$regex": project.Whitelist,
 			},
 		}
 	}

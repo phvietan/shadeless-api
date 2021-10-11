@@ -14,12 +14,14 @@ type Project struct {
 	Description string      `json:"description"`
 	Status      string      `json:"status"`
 	Blacklist   []Blacklist `json:"blacklist"`
+	Whitelist   string      `json:"whitelist"`
 }
 
 func NewProject() *Project {
 	return &Project{
 		Status:    ProjectStatusTodo,
 		Blacklist: make([]Blacklist, 0),
+		Whitelist: "",
 	}
 }
 

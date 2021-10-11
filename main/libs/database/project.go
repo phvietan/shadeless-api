@@ -71,6 +71,7 @@ func (this *ProjectDatabase) UpdateProject(id primitive.ObjectID, project *schem
 		"name":        project.Name,
 		"description": project.Description,
 		"blacklist":   project.Blacklist,
+		"whitelist":   project.Whitelist,
 	}
 
 	if _, err := this.db.UpdateByID(this.ctx, id, bson.D{{"$set", updated}}); err != nil {
