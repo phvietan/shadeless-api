@@ -58,11 +58,13 @@ func GetPathsFromParsedPacket(packet *ParsedPacket) ([]ParsedPath, error) {
 		if idx == len(paths)-1 && path == "" {
 			continue
 		}
+		curPath += path
 		t := PathTypeDirectory
 		if idx == len(paths)-1 && packet.StaticScore > 50 {
 			t = PathTypeFile
+		} else {
+			curPath += "/"
 		}
-		curPath += path + "/"
 		result = append(result, *NewParsedPath(packet, curPath, t))
 	}
 	return result, nil

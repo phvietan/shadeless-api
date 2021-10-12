@@ -2,7 +2,6 @@ package projects
 
 import (
 	"errors"
-	"log"
 	"os"
 	"shadeless-api/main/libs/database"
 	"shadeless-api/main/libs/database/schema"
@@ -64,6 +63,19 @@ func postProjects(c *gin.Context) {
 		responser.ResponseError(c, err)
 		return
 	}
+
+	var botPathDb database.IBotPathDatabase = new(database.BotPathDatabase).Init()
+	if err := botPathDb.Insert(schema.NewBotPath(project.Name)); err != nil {
+		responser.ResponseError(c, err)
+		return
+	}
+
+	var botFuzzerDb database.IBotFuzzerDatabase = new(database.BotFuzzerDatabase).Init()
+	if err := botFuzzerDb.Insert(schema.NewBotFuzzer(project.Name)); err != nil {
+		responser.ResponseError(c, err)
+		return
+	}
+
 	responser.ResponseOk(c, "Successfully create project")
 }
 
@@ -124,32 +136,24 @@ func putProject(c *gin.Context) {
 	}
 
 	if dbProject.Name != newProject.Name {
-		var packetDb database.IPacketDatabase = new(database.PacketDatabase).Init()
-		if err = packetDb.UpdateOneProperty("project", dbProject.Name, newProject.Name); err != nil {
+		var listDbs []database.IDatabase
+		listDbs = append(listDbs, new(database.UserDatabase).Init())
+		listDbs = append(listDbs, new(database.NoteDatabase).Init())
+		listDbs = append(listDbs, new(database.PacketDatabase).Init())
+		listDbs = append(listDbs, new(database.ParsedPacketDatabase).Init())
+		listDbs = append(listDbs, new(database.ParsedPathDatabase).Init())
+		listDbs = append(listDbs, new(database.FileDatabase).Init())
+		listDbs = append(listDbs, new(database.BotPathDatabase).Init())
+		listDbs = append(listDbs, new(database.BotFuzzerDatabase).Init())
+		for _, d := range listDbs {
+			if err := d.UpdateOneProperty("project", dbProject.Name, newProject.Name); err != nil {
+				responser.ResponseError(c, err)
+				return
+			}
+		}
+		if err := os.Rename("./files/"+dbProject.Name, "./files/"+newProject.Name); err != nil {
 			responser.ResponseError(c, err)
 			return
-		}
-
-		var parsedPacketDb database.IParsedPacketDatabase = new(database.ParsedPacketDatabase).Init()
-		if err = parsedPacketDb.UpdateOneProperty("project", dbProject.Name, newProject.Name); err != nil {
-			responser.ResponseError(c, err)
-			return
-		}
-
-		var parsedPathDb database.IParsedPathDatabase = new(database.ParsedPathDatabase).Init()
-		if err = parsedPathDb.UpdateOneProperty("project", dbProject.Name, newProject.Name); err != nil {
-			responser.ResponseError(c, err)
-			return
-		}
-
-		var fileDb database.IFileDatabase = new(database.FileDatabase).Init()
-		if err = fileDb.UpdateOneProperty("project", dbProject.Name, newProject.Name); err != nil {
-			responser.ResponseError(c, err)
-			return
-		}
-		err = os.Rename("./files/"+dbProject.Name, "./files/"+newProject.Name)
-		if err != nil {
-			log.Fatal(err)
 		}
 	}
 
@@ -185,38 +189,22 @@ func deleteProjects(c *gin.Context) {
 		return
 	}
 	if option.All == true {
-		var userDb database.IUserDatabase = new(database.UserDatabase).Init()
-		if err := userDb.DeleteByOneProperty("project", project.Name); err != nil {
-			responser.ResponseError(c, err)
-			return
+		var listDbs []database.IDatabase
+		listDbs = append(listDbs, new(database.UserDatabase).Init())
+		listDbs = append(listDbs, new(database.NoteDatabase).Init())
+		listDbs = append(listDbs, new(database.PacketDatabase).Init())
+		listDbs = append(listDbs, new(database.ParsedPacketDatabase).Init())
+		listDbs = append(listDbs, new(database.ParsedPathDatabase).Init())
+		listDbs = append(listDbs, new(database.FileDatabase).Init())
+		listDbs = append(listDbs, new(database.BotPathDatabase).Init())
+		listDbs = append(listDbs, new(database.BotFuzzerDatabase).Init())
+		for _, d := range listDbs {
+			if err := d.DeleteByOneProperty("project", project.Name); err != nil {
+				responser.ResponseError(c, err)
+				return
+			}
 		}
-		var noteDb database.INoteDatabase = new(database.NoteDatabase).Init()
-		if err := noteDb.DeleteByOneProperty("project", project.Name); err != nil {
-			responser.ResponseError(c, err)
-			return
-		}
-		var packetDb database.IPacketDatabase = new(database.PacketDatabase).Init()
-		if err := packetDb.DeleteByOneProperty("project", project.Name); err != nil {
-			responser.ResponseError(c, err)
-			return
-		}
-		var parsedPacketDb database.IParsedPacketDatabase = new(database.ParsedPacketDatabase).Init()
-		if err := parsedPacketDb.DeleteByOneProperty("project", project.Name); err != nil {
-			responser.ResponseError(c, err)
-			return
-		}
-		var parsedPathDb database.IParsedPathDatabase = new(database.ParsedPathDatabase).Init()
-		if err = parsedPathDb.DeleteByOneProperty("project", project.Name); err != nil {
-			responser.ResponseError(c, err)
-			return
-		}
-		var fileDb database.IFileDatabase = new(database.FileDatabase).Init()
-		if err := fileDb.DeleteByOneProperty("project", project.Name); err != nil {
-			responser.ResponseError(c, err)
-			return
-		}
-		err := os.RemoveAll("./files/" + project.Name)
-		if err != nil {
+		if err := os.RemoveAll("./files/" + project.Name); err != nil {
 			responser.ResponseError(c, err)
 			return
 		}

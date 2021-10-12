@@ -10,7 +10,7 @@ class ParsedPacketDb {
   private static instance?: ParsedPacketDb = undefined;
 
   constructor(dbo: Db) {
-    this.db = dbo.collection('parsed_packets');
+    this.db = dbo.collection('bot_path');
   }
 
   static getInstance(dbo?: Db): ParsedPacketDb {

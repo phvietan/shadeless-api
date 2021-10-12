@@ -1,15 +1,16 @@
 import { ParsedPacketRequest } from "./database/parsed_packet";
-import axios, { AxiosInstance, AxiosRequestConfig, Method } from 'axios';
+import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, Method } from 'axios';
 import fsPromise from 'fs/promises';
 import fs from 'fs';
 import path from 'path';
 import { randomHex } from "./helper";
+import Bluebird from "bluebird";
 
 class HttpRequest {
   wordlist: string[];
 
   constructor () {
-    const wordlistFile = fs.readFileSync(path.join(__dirname, 'fuzzer/poc/wordlists/dir_test.txt'), 'utf8').trim();
+    const wordlistFile = fs.readFileSync(path.join(__dirname, 'fuzzer/poc/wordlists/dir.txt'), 'utf8').trim();
     this.wordlist = wordlistFile.split('\n');
   }
 
@@ -55,11 +56,40 @@ class HttpRequest {
     };
   }
 
-  createForDirPath(packet: ParsedPacketRequest, currentPath: string): AxiosRequestConfig[] {
+  createOptsForDirPath(packet: ParsedPacketRequest, currentPath: string): AxiosRequestConfig[] {
     const opts = this.wordlist.map(w => this.getOptFromPacketAndNewPath(packet, currentPath, w));
     opts.push(this.getOptFromPacketAndNewPath(packet, currentPath, randomHex(32)));
     [opts[0], opts[opts.length - 1]] = [opts[opts.length - 1], opts[0]]; // Make the first option as the random path (404 request)
     return opts;
+  }
+
+  async sendAllOpts(requestsOptions: AxiosRequestConfig[]): Promise<AxiosResponse<any>[]> {
+    let cnt = 0;
+    const resps = await Bluebird.map(requestsOptions, async (opts) => {
+      cnt += 1;
+      if (cnt % 30 === 0) {
+        console.log(`Done ${cnt}/${requestsOptions.length}: ${opts.baseURL}${opts.url}`);
+      }
+      try {
+        const resp = await axios.request(opts);
+        return resp;
+      }
+      catch (err: any) {
+        const error = err as AxiosError<any>;
+        // The request was made and the server responded with a status code that falls out of the range of 2xx
+        if (error.response) {
+          const { response } = error;
+          return response;
+        } else if (error.request) { // The request was made but no response was received
+          return null;
+        } else {
+          // Something happened in setting up the request that triggered an Error
+          console.log('WTF error in config? ', error.message);
+          return null;
+        }
+      }
+    }, { concurrency: 3 });
+    return resps;
   }
 }
 

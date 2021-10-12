@@ -1,4 +1,6 @@
 import { Collection, Db } from 'mongodb';
+import { getFilterByProjectForBW } from '.';
+import { Project } from './project';
 
 export enum PathStatus {
   TODO = 'todo',
@@ -6,6 +8,7 @@ export enum PathStatus {
   DONE = 'done',
 }
 export enum PathType {
+  NONE = '',
   FILE = 'file',
   FOLDER = 'folder',
 };
@@ -45,10 +48,12 @@ class ParsedPathDb {
     return this.instance;
   }
 
-  async getTodo() {
+  async getTodo(project: Project) {
+    const filter = getFilterByProjectForBW(project);
     const documents = await this.db.find({
       status: PathStatus.TODO,
       requestPacketId: { $ne: "" },
+      ...filter,
     }).sort({ created_at: 1 }).limit(this.FUZZ_PATH_NUM).toArray();
     return (documents as any) as ParsedPath[];
   }
