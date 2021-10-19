@@ -1,17 +1,20 @@
-import { ParsedPacketRequest } from "./database/parsed_packet";
-import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, Method } from 'axios';
-import fsPromise from 'fs/promises';
 import fs from 'fs';
+import fsPromise from 'fs/promises';
 import path from 'path';
-import { randomHex } from "./helper";
+import { sleep } from "../libs/helper";
 import Bluebird from "bluebird";
+import { BotFuzzer } from "../database/bot_fuzzer";
+import axios, { AxiosError, AxiosRequestConfig, AxiosResponse, Method } from 'axios';
+import { PacketRequest } from "../database/packet";
 
-class HttpRequest {
+class BotFuzzerSender {
+  options: BotFuzzer;
   wordlist: string[];
 
-  constructor () {
+  constructor (options: BotFuzzer) {
     const wordlistFile = fs.readFileSync(path.join(__dirname, 'fuzzer/poc/wordlists/dir.txt'), 'utf8').trim();
     this.wordlist = wordlistFile.split('\n');
+    this.options = options;
   }
 
   static createHeader(headers: string[]): Record<string,string> {
@@ -27,7 +30,7 @@ class HttpRequest {
     return result;
   }
 
-  static async createFromPacket(packet: ParsedPacketRequest): Promise<AxiosRequestConfig> {
+  static async createFromPacket(packet: PacketRequest): Promise<AxiosRequestConfig> {
     const body = await fsPromise.readFile(path.join(__dirname, '../../main/files/', packet.project, packet.requestBodyHash));
     return {
       method: packet.method as Method,
@@ -42,30 +45,10 @@ class HttpRequest {
     };
   }
 
-  private getOptFromPacketAndNewPath(packet: ParsedPacketRequest, currentPath: string, newPath: string): AxiosRequestConfig {
-    const path = (currentPath[currentPath.length - 1] === '/') ? currentPath : currentPath + '/';
-    return {
-      method: 'GET',
-      withCredentials: true,
-      responseType: 'text',
-      transformResponse: [data => data],
-      baseURL: packet.origin,
-      url: path + newPath,
-      timeout: 1500,
-      headers: HttpRequest.createHeader(packet.requestHeaders),
-    };
-  }
-
-  createOptsForDirPath(packet: ParsedPacketRequest, currentPath: string): AxiosRequestConfig[] {
-    const opts = this.wordlist.map(w => this.getOptFromPacketAndNewPath(packet, currentPath, w));
-    opts.push(this.getOptFromPacketAndNewPath(packet, currentPath, randomHex(32)));
-    [opts[0], opts[opts.length - 1]] = [opts[opts.length - 1], opts[0]]; // Make the first option as the random path (404 request)
-    return opts;
-  }
-
-  async sendAllOpts(requestsOptions: AxiosRequestConfig[]): Promise<AxiosResponse<any>[]> {
+  async sendAll(requestsOptions: AxiosRequestConfig[]): Promise<AxiosResponse<any>[]> {
     let cnt = 0;
     const resps = await Bluebird.map(requestsOptions, async (opts) => {
+      sleep(this.options.sleepRequest);
       cnt += 1;
       if (cnt % 30 === 0) {
         console.log(`Done ${cnt}/${requestsOptions.length}: ${opts.baseURL}${opts.url}`);
@@ -93,5 +76,4 @@ class HttpRequest {
   }
 }
 
-const ins = new HttpRequest();
-export default ins;
+export default BotFuzzerSender;

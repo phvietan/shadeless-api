@@ -1,10 +1,16 @@
 import { Db } from 'mongodb';
 import ParsedPacketDb from './parsed_packet';
 import ParsedPathDb from './parsed_path';
+import BotPathDb from './bot_path';
+import BotFuzzerDb from './bot_fuzzer';
+import ProjectDb from './project';
 import { BlacklistType, Project } from './project';
 
 export function initDatabase(dbo: Db) {
   ParsedPathDb.getInstance(dbo);
+  BotPathDb.getInstance(dbo);
+  BotFuzzerDb.getInstance(dbo);
+  ProjectDb.getInstance(dbo);
   ParsedPacketDb.getInstance(dbo);
 }
 
@@ -22,7 +28,7 @@ export function getFilterByProjectForBW(project: Project): any {
   }
   if (blacklistRegex) {
     filter.origin["$not"] = {
-      $regex: blacklistRegex,
+      $regex: blacklistRegex.value,
     }
   }
   return filter;

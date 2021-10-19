@@ -1,5 +1,5 @@
 import { AxiosResponse } from "axios";
-import { randomBetween } from "../helper";
+import { randomBetween } from "../libs/helper";
 
 function diffLength(a: string, b: string): number {
   const maxLength = Math.max(a.length, b.length);

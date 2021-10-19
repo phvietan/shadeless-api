@@ -27,6 +27,7 @@ func Routes(route *gin.Engine) {
 	PathsRoutes(route)
 	NotesRoutes(route)
 	UsersRoutes(route)
+	BotPathRoutes(route)
 }
 
 func getProjects(c *gin.Context) {

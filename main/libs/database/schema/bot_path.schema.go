@@ -11,13 +11,15 @@ type BotPath struct {
 	Running      bool   `json:"running" bson:"running"`
 	SleepRequest int    `json:"sleepRequest" bson:"sleepRequest"` // Sleep between requests in ms
 	AsyncRequest int    `json:"asyncRequest" bson:"asyncRequest"` // Number of async requests
+	Timeout      int    `json:"timeout" bson:"timeout"`
 }
 
 func NewBotPath(project string) *BotPath {
 	return &BotPath{
 		Project:      project,
 		Running:      false,
-		SleepRequest: 0, // Quite fast,
-		AsyncRequest: 5, // Async 5 requests at a time
+		SleepRequest: 0,    // Quite fast,
+		AsyncRequest: 5,    // Async 5 requests at a time
+		Timeout:      2000, // Timeout of each http request
 	}
 }

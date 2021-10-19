@@ -10,7 +10,7 @@ export enum PathStatus {
 export enum PathType {
   NONE = '',
   FILE = 'file',
-  FOLDER = 'folder',
+  FOLDER = 'directory',
 };
 
 export interface ParsedPath {
@@ -53,6 +53,7 @@ class ParsedPathDb {
     const documents = await this.db.find({
       status: PathStatus.TODO,
       requestPacketId: { $ne: "" },
+      type: PathType.FOLDER,
       ...filter,
     }).sort({ created_at: 1 }).limit(this.FUZZ_PATH_NUM).toArray();
     return (documents as any) as ParsedPath[];
