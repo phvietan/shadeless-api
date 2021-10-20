@@ -9,7 +9,6 @@ import (
 )
 
 func healthCheckHandler(c *gin.Context) {
-	fmt.Println("wtf?")
 	c.String(200, "Health check ok")
 }
 

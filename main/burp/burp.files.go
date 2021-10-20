@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"path"
+	"shadeless-api/main/config"
 	"shadeless-api/main/libs/database"
 	"shadeless-api/main/libs/database/schema"
 	"shadeless-api/main/libs/responser"
@@ -23,7 +24,8 @@ func uploadFile(c *gin.Context) {
 	id, _ := c.GetPostForm("id")
 
 	// Create folder for serve static files
-	dir := path.Join("./files", project)
+	fileDir := config.GetInstance().GetFileDir()
+	dir := path.Join(fileDir, project)
 	_ = os.Mkdir(dir, 0755)
 
 	fileName := path.Join(dir, id)

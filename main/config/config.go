@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/joho/godotenv"
 )
@@ -12,6 +13,7 @@ type config struct {
 	bindAddress string
 	frontendUrl string
 	databaseUrl string
+	fileDir     string
 }
 
 func defaultValue(val string, defaultValue string) string {
@@ -28,6 +30,7 @@ func (conf *config) init() *config {
 	conf.bindAddress = defaultValue(os.Getenv("BIND_ADDRESS"), "0.0.0.0:3000")
 	conf.frontendUrl = defaultValue(os.Getenv("FRONTEND_URL"), "")
 	conf.databaseUrl = defaultValue(os.Getenv("DATABASE_URL"), "")
+	conf.fileDir, _ = filepath.Abs(filepath.Join("..", "files"))
 	return conf
 }
 
@@ -43,6 +46,9 @@ func (conf *config) GetFrontendUrl() string {
 func (conf *config) GetDatabaseUrl() string {
 	return conf.databaseUrl
 }
+func (conf *config) GetFileDir() string {
+	return conf.fileDir
+}
 
 func (conf *config) SetEnvironment(val string) {
 	conf.environment = val
@@ -55,6 +61,9 @@ func (conf *config) SetFrontendUrl(val string) {
 }
 func (conf *config) SetDatabaseUrl(val string) {
 	conf.databaseUrl = val
+}
+func (conf *config) SetFileDir(val string) {
+	conf.fileDir = val
 }
 
 var configInstance *config = new(config).init()

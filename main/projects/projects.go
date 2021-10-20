@@ -3,6 +3,8 @@ package projects
 import (
 	"errors"
 	"os"
+	"path"
+	"shadeless-api/main/config"
 	"shadeless-api/main/libs/database"
 	"shadeless-api/main/libs/database/schema"
 	"shadeless-api/main/libs/responser"
@@ -152,7 +154,10 @@ func putProject(c *gin.Context) {
 				return
 			}
 		}
-		if err := os.Rename("./files/"+dbProject.Name, "./files/"+newProject.Name); err != nil {
+		fileDir := config.GetInstance().GetFileDir()
+		oldPath := path.Join(fileDir, dbProject.Name)
+		newPath := path.Join(fileDir, newProject.Name)
+		if err := os.Rename(oldPath, newPath); err != nil {
 			responser.ResponseError(c, err)
 			return
 		}
@@ -205,7 +210,9 @@ func deleteProjects(c *gin.Context) {
 				return
 			}
 		}
-		if err := os.RemoveAll("./files/" + project.Name); err != nil {
+		fileDir := config.GetInstance().GetFileDir()
+		deletePath := path.Join(fileDir, project.Name)
+		if err := os.RemoveAll(deletePath); err != nil {
 			responser.ResponseError(c, err)
 			return
 		}
