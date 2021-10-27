@@ -8,28 +8,21 @@ type Config = {
   bindAddress: string;
   frontendUrl: string;
   wordlistDir: string;
+  wordlistFile: string;
+  bodyDir: string;
 };
 
 @Injectable()
 export class ConfigService {
-  private static instance?: ConfigService;
-
-  constructor() {
-    console.log('Initialized ConfigService');
-  }
-
-  static getInstance(): ConfigService {
-    if (this.instance) return this.instance;
-    this.instance = new ConfigService();
-    return this.instance;
-  }
-
   getConfig(): Config {
+    const wordlistDir = path.join(__dirname, '../../wordlists/');
     return {
       databaseUrl: process.env.DATABASE_URL,
       bindAddress: process.env.BIND_ADDRESS,
       frontendUrl: process.env.FRONTEND_URL,
-      wordlistDir: path.join(__dirname, '../../wordlists/dir.txt'),
+      wordlistDir,
+      wordlistFile: path.join(wordlist, 'dir_test.txt'),
+      bodyDir: path.join(__dirname, '../../../files/'),
     };
   }
 }

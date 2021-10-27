@@ -31,7 +31,7 @@ func (this *StaticScorer) GetScore() float64 {
 		score -= 30
 	}
 	if p.Method != "GET" && p.Method != "HEAD" {
-		score -= 30
+		score -= 50
 	}
 
 	// Extension that looks like static

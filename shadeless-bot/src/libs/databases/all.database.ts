@@ -1,4 +1,5 @@
 import { Collection, Db } from 'mongodb';
+import BotFuzzerDb from './botFuzzer.database';
 import BotPathDb from './botPath.database';
 import PacketDb from './packet.database';
 import ParsedPacketDb from './parsedPacket.database';
@@ -19,6 +20,7 @@ class AllDatabases {
 
   packetDb: PacketDb;
   botPathDb: BotPathDb;
+  botFuzzerDb: BotFuzzerDb;
   projectDb: ProjectDb;
   parsedPathDb: ParsedPathDb;
   parsedPacketDb: ParsedPacketDb;
@@ -29,6 +31,7 @@ class AllDatabases {
     this.dbo = dbo;
     this.packetDb = PacketDb.getInstance(this.dbo);
     this.botPathDb = BotPathDb.getInstance(this.dbo);
+    this.botFuzzerDb = BotFuzzerDb.getInstance(this.dbo);
     this.projectDb = ProjectDb.getInstance(this.dbo);
     this.parsedPathDb = ParsedPathDb.getInstance(this.dbo);
     this.parsedPacketDb = ParsedPacketDb.getInstance(this.dbo);

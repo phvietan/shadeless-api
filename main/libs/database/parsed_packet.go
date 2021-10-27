@@ -59,8 +59,10 @@ func (this *ParsedPacketDatabase) Upsert(packet *schema.ParsedPacket) error {
 		fmt.Println("Not found parse packet, creating one")
 		return this.Insert(packet)
 	}
-	// If found, then update, other properties like fuzzed, static_score should not be updated
-	packet.Fuzzed = result.Fuzzed
+	// If found, then update. However, other properties like status, result, static_score should not be updated
+	packet.Status = result.Status
+	packet.Result = result.Result
+	packet.StaticScore = result.StaticScore
 	_, err := this.db.UpdateByID(this.ctx, result.ID, bson.M{
 		"$set": packet,
 	})
@@ -184,7 +186,11 @@ func (this *ParsedPacketDatabase) GetParsedByRawPackets(project string, packets 
 		found := false
 		for _, parsedPacket := range allParsedPacketInDB {
 			if h == parsedPacket.Hash {
-				result = append(result, parsedPacket)
+				curP := parsedPacket
+				curP.RequestPacketId = packets[idx].RequestPacketId
+				curP.RequestPacketIndex = packets[idx].RequestPacketIndex
+				curP.RequestPacketPrefix = packets[idx].RequestPacketPrefix
+				result = append(result, curP)
 				found = true
 				break
 			}

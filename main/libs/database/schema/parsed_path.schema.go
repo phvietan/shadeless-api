@@ -10,14 +10,14 @@ import (
 
 type ParsedPath struct {
 	mgm.DefaultModel `bson:",inline"`
-	RequestPacketId  string `json:"requestPacketId" bson:"requestPacketId"`
-	Origin           string `json:"origin"`
-	Path             string `json:"path"`
-	Status           string `json:"status"`
-	Project          string `json:"project"`
-	Type             string `json:"type" bson:"type"`
-	Force            bool   `json:"force" bson:"force"`
-	Error            string `json:"error" bson:"error"`
+	RequestPacketId  string   `json:"requestPacketId" bson:"requestPacketId"`
+	Origin           string   `json:"origin"`
+	Path             string   `json:"path"`
+	Status           string   `json:"status"`
+	Project          string   `json:"project"`
+	Error            string   `json:"error" bson:"error"`
+	LogDir           string   `json:"logDir" bson:"logDir"`
+	Result           []string `json:"result" bson:"result"`
 }
 
 const (
@@ -26,21 +26,16 @@ const (
 	PathStatusDone     = "done"
 )
 
-const (
-	PathTypeFile      = "file"
-	PathTypeDirectory = "directory"
-)
-
-func NewParsedPath(packet *ParsedPacket, path string, pathType string) *ParsedPath {
+func NewParsedPath(packet *ParsedPacket, path string) *ParsedPath {
 	res := &ParsedPath{
 		Project:         packet.Project,
 		Origin:          packet.Origin,
 		Path:            path,
 		Status:          PathStatusTodo,
 		RequestPacketId: packet.RequestPacketId,
-		Type:            pathType,
-		Force:           false,
+		LogDir:          "",
 		Error:           "",
+		Result:          []string{},
 	}
 	res.DefaultModel.CreatedAt = time.Now()
 	res.DefaultModel.UpdatedAt = time.Now()
@@ -58,14 +53,10 @@ func GetPathsFromParsedPacket(packet *ParsedPacket) ([]ParsedPath, error) {
 		if idx == len(paths)-1 && path == "" {
 			continue
 		}
-		curPath += path
-		t := PathTypeDirectory
-		if idx == len(paths)-1 && packet.StaticScore > 50 {
-			t = PathTypeFile
-		} else {
-			curPath += "/"
+		if idx != len(paths)-1 || packet.StaticScore <= 50 {
+			curPath += path + "/"
+			result = append(result, *NewParsedPath(packet, curPath))
 		}
-		result = append(result, *NewParsedPath(packet, curPath, t))
 	}
 	return result, nil
 }

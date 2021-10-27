@@ -1,15 +1,10 @@
 import { Collection, Db } from 'mongodb';
 import { Project, getFilterByProjectForBW } from './project.database';
 
-export enum PathStatus {
+export enum FuzzStatus {
   TODO = 'todo',
   SCANNING = 'scanning',
   DONE = 'done',
-}
-export enum PathType {
-  NONE = '',
-  FILE = 'file',
-  FOLDER = 'directory',
 }
 
 export interface ParsedPath {
@@ -17,16 +12,13 @@ export interface ParsedPath {
   requestPacketId: string;
   origin: string;
   path: string;
-  status: PathStatus;
+  status: FuzzStatus;
   project: string;
   force: boolean;
   created_at?: Date;
   updated_at?: Date;
-  type: PathType;
   error: string;
 }
-
-type DocumentType = Pick<Document, keyof Document>;
 
 class ParsedPathDb {
   FUZZ_PATH_NUM = 1;
@@ -51,9 +43,8 @@ class ParsedPathDb {
     const filter = getFilterByProjectForBW(project);
     const documents = await this.db
       .find({
-        status: PathStatus.TODO,
+        status: FuzzStatus.TODO,
         requestPacketId: { $ne: '' },
-        type: PathType.FOLDER,
         ...filter,
       })
       .sort({ created_at: 1 })
@@ -68,27 +59,11 @@ class ParsedPathDb {
     });
   }
 
-  async updateError(query: any, error: string) {
-    return this.update(query, { error });
-  }
-
-  async insertResult(arrParsedPath: ParsedPath[]) {
-    if (arrParsedPath.length === 0) return;
-    const bypassCheck = arrParsedPath as any as DocumentType[];
-    try {
-      await this.db.insertMany(bypassCheck);
-    } catch (err) {}
-  }
-
   async resetScanning() {
     return this.db.updateMany(
+      { status: FuzzStatus.SCANNING },
       {
-        status: PathStatus.SCANNING,
-      },
-      {
-        $set: {
-          status: PathStatus.TODO,
-        },
+        $set: { status: FuzzStatus.TODO },
       },
     );
   }

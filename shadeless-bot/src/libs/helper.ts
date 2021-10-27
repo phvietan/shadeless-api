@@ -35,3 +35,22 @@ export function getHeaderMapFromHeaders(
   });
   return result;
 }
+
+export function isArray(value: any): boolean {
+  return Array.isArray(value);
+}
+
+export function isNumber(value: any): boolean {
+  return typeof value === 'number';
+}
+
+export function isString(value: any): boolean {
+  return typeof value === 'string';
+}
+
+export function isObject(value: any): boolean {
+  if (typeof value === 'object' && !Array.isArray(value) && value !== null) {
+    return true;
+  }
+  return false;
+}

@@ -120,7 +120,6 @@ func (this *ParsedPathDatabase) Upsert(parsedPath *schema.ParsedPath) error {
 	// If found, then update requestPacketId
 	_, err := this.db.UpdateByID(this.ctx, result.ID, bson.M{
 		"$set": bson.M{
-			"type":            parsedPath.Type,
 			"requestPacketId": parsedPath.RequestPacketId,
 		},
 	})

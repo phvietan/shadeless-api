@@ -1,15 +1,11 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { BackgroundController } from './background/background.controller';
+import { ConfigService } from 'config/config.service';
+import { BackgroundModule } from './background/background.module';
 
 @Module({
-  imports: [],
+  imports: [BackgroundModule],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [ConfigService],
 })
-export class AppModule {
-  constructor() {
-    BackgroundController.bootstrapBackground();
-  }
-}
+export class AppModule {}

@@ -32,9 +32,10 @@ type ParsedPacket struct {
 	Parameters         []string `json:"parameters"`
 	RequestHeaders     []string `json:"requestHeaders" bson:"requestHeaders"`
 
-	Hash        string            `json:"hash" bson:"hash"`
-	Fuzzed      map[string]string `json:"fuzzed" bson:"fuzzed"`
-	StaticScore float64           `json:"staticScore" bson:"staticScore"`
+	Hash        string   `json:"hash" bson:"hash"`
+	Status      string   `json:"status" bson:"status"`
+	Result      []string `json:"result" bson:"result"`
+	StaticScore float64  `json:"staticScore" bson:"staticScore"`
 
 	ResponseStatus           int               `json:"responseStatus" bson:"responseStatus"`
 	ResponseContentType      string            `json:"responseContentType" bson:"responseContentType"`
@@ -56,17 +57,10 @@ type ParsedPacket struct {
 }
 
 const (
-	fuzzNew     = "new"
-	fuzzRunning = "running"
-	fuzzDone    = "done"
+	fuzzTodo     = "todo"
+	fuzzScanning = "scanning"
+	fuzzDone     = "done"
 )
-
-func makeDefaultFuzzMap() map[string]string {
-	m := make(map[string]string)
-	m["commix"] = fuzzNew
-	m["jaeles"] = fuzzNew
-	return m
-}
 
 func (this *ParsedPacket) ParseFromPacket(packet *Packet) (*ParsedPacket, error) {
 	if packet == nil {
@@ -81,7 +75,8 @@ func (this *ParsedPacket) ParseFromPacket(packet *Packet) (*ParsedPacket, error)
 	if err := json.Unmarshal(bytesPacket, result); err != nil {
 		return nil, err
 	}
-	result.Fuzzed = makeDefaultFuzzMap()
+	result.Result = []string{}
+	result.Status = fuzzTodo
 	result.Hash = CalculatePacketHash(result.Method, result.ResponseStatus, result.Origin, result.Path, result.Parameters)
 	result.setStaticScore()
 	return result, nil
