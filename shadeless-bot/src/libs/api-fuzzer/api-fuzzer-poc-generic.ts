@@ -19,24 +19,36 @@ import ShadelessLogger from 'libs/logger/logger';
 import { ConfigService } from 'config/config.service';
 import path from 'path';
 import { BotFuzzer } from 'libs/databases/botFuzzer.database';
-
+import { ParsedPacket } from 'libs/databases/parsedPacket.database';
+import qs from 'qs';
 export interface ApiFuzzer {
+  condition?: () => Promise<boolean>;
   poc: () => Promise<any>;
-  detect: (resp: AxiosResponse[]) => Promise<boolean>;
+  detect: (resp: any) => Promise<number>;
 }
+
+export type MyAxiosResponse = AxiosResponse & { timetook: number };
 
 // TODO: push wordlist dir into BotPath
 export default class ApiFuzzerPocGeneric {
   options: BotFuzzer;
   logger: ShadelessLogger;
+  packet: ParsedPacket;
 
-  constructor(options: BotFuzzer, name: string, logDir: string) {
+  constructor(options: BotFuzzer, packet: ParsedPacket, name: string) {
+    const logDir = `logs/api/${
+      options.project
+    }/${ShadelessLogger.sanitizeLogDir(
+      packet.origin + packet.path + packet.hash,
+    )}/${name}.txt`;
+
     this.options = options;
     const logger = new ShadelessLogger({
       name,
       logDir,
       prefix: name,
     });
+    this.packet = packet;
     this.logger = logger;
   }
 
@@ -94,15 +106,23 @@ export default class ApiFuzzerPocGeneric {
 
   protected async sendOneRequest(
     opt: AxiosRequestConfig<any>,
-  ): Promise<AxiosResponse<unknown, any> | null> {
+  ): Promise<MyAxiosResponse | null> {
+    const before = Date.now();
     try {
-      const resp = await axios.request(opt);
+      const resp: MyAxiosResponse = {
+        ...(await axios.request(opt)),
+        timetook: Date.now() - before,
+      };
       return resp;
     } catch (err: any) {
       const error = err as AxiosError<any>;
+      const after = Date.now();
       // The request was made and the server responded with a status code that falls out of the range of 2xx
       if (error.response) {
-        const { response } = error;
+        const response: MyAxiosResponse = {
+          ...error.response,
+          timetook: after - before,
+        };
         return response;
       } else if (error.request) {
         // The request was made but no response was received
@@ -118,7 +138,7 @@ export default class ApiFuzzerPocGeneric {
   protected async sendAllQuerystringInValue(
     opt: AxiosRequestConfig<any>,
     payload: string,
-  ): Promise<AxiosResponse<unknown, any>[]> {
+  ): Promise<MyAxiosResponse[]> {
     const { params } = opt;
     const listParamsWithPayload = this.substitutePayloadToObj(params, payload);
     return Bluebird.map(listParamsWithPayload, async (params) => {
@@ -128,12 +148,33 @@ export default class ApiFuzzerPocGeneric {
     });
   }
 
+  protected async sendAllBodyInValue(
+    opt: AxiosRequestConfig<any>,
+    payload: string,
+  ): Promise<MyAxiosResponse[]> {
+    const contentType = opt.headers['Content-Type'];
+    if (!contentType) return [];
+    let body: any = {};
+    if (contentType.includes('json')) {
+      body = JSON.parse(opt.data);
+    }
+    if (contentType.includes('x-www-form-urlencoded')) {
+      body = Object.assign({}, qs.parse(opt.data));
+    }
+    const listParamsWithPayload = this.substitutePayloadToObj(body, payload);
+    return Bluebird.map(listParamsWithPayload, async (data) => {
+      const newOpt = Object.assign({}, opt);
+      newOpt.data = data;
+      return this.sendOneRequest(newOpt);
+    });
+  }
+
   protected async sendAllQuerystringInValueWordlist(
     opt: AxiosRequestConfig<any>,
     wordlist: string[],
-  ): Promise<AxiosResponse<unknown, any>[]> {
+  ): Promise<MyAxiosResponse[]> {
     let cnt = 0;
-    let result: AxiosResponse<unknown, any>[] = [];
+    let result: MyAxiosResponse[] = [];
     await Bluebird.map(
       wordlist,
       async (word) => {
@@ -145,7 +186,29 @@ export default class ApiFuzzerPocGeneric {
         const resps = await this.sendAllQuerystringInValue(opt, word);
         result = [...result, ...resps];
       },
-      { concurrency: 3 },
+      { concurrency: this.options.asyncRequest },
+    );
+    return result;
+  }
+
+  protected async sendAllBodyInValueWordlist(
+    opt: AxiosRequestConfig<any>,
+    wordlist: string[],
+  ): Promise<MyAxiosResponse[]> {
+    let cnt = 0;
+    let result: MyAxiosResponse[] = [];
+    await Bluebird.map(
+      wordlist,
+      async (word) => {
+        sleep(this.options.sleepRequest);
+        cnt += 1;
+        if (cnt % 30 === 0) {
+          this.logger.log(`Done ${cnt}/${wordlist.length}: ${word}`);
+        }
+        const resps = await this.sendAllQuerystringInValue(opt, word);
+        result = [...result, ...resps];
+      },
+      { concurrency: this.options.asyncRequest },
     );
     return result;
   }

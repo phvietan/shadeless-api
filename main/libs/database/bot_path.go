@@ -61,6 +61,7 @@ func (this *BotPathDatabase) PutBotPathByProject(id primitive.ObjectID, newBotPa
 	updated := bson.M{
 		"sleepRequest": newBotPath.SleepRequest,
 		"asyncRequest": newBotPath.AsyncRequest,
+		"timeout":      newBotPath.Timeout,
 	}
 
 	if _, err := this.db.UpdateByID(this.ctx, id, bson.D{{"$set", updated}}); err != nil {

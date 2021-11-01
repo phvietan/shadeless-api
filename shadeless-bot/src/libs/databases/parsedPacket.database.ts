@@ -8,6 +8,7 @@ export interface ParsedPacket extends Packet {
   result: string[];
   status: FuzzStatus;
   staticScore: number;
+  logDir: string;
 }
 
 class ParsedPacketDb {
@@ -34,6 +35,12 @@ class ParsedPacketDb {
     const document = await this.db.findOne({ requestPacketId });
     if (!document) return undefined;
     return document as any as ParsedPacket;
+  }
+
+  async update(query: any, value: any) {
+    await this.db.updateOne(query, {
+      $set: value,
+    });
   }
 
   async resetScanning() {

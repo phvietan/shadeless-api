@@ -20,6 +20,6 @@ func NewBotPath(project string) *BotPath {
 		Running:      false,
 		SleepRequest: 0,    // Quite fast,
 		AsyncRequest: 5,    // Async 5 requests at a time
-		Timeout:      2000, // Timeout of each http request
+		Timeout:      2500, // Timeout of each http request
 	}
 }

@@ -91,7 +91,7 @@ export default class PathFuzzerSender {
         }
         return this.sendOneRequest(opt);
       },
-      { concurrency: 3 },
+      { concurrency: this.options.asyncRequest },
     );
   }
 

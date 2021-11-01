@@ -1,23 +1,41 @@
-import * as fs from 'fs';
-import * as Bluebird from 'bluebird';
-import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
-
-import { BotPath } from 'libs/databases/botPath.database';
 import { PacketRequest } from 'libs/databases/packet.database';
-import ShadelessLogger from 'libs/logger/logger';
+import ExpressFastifyOpenRedirect from './poc/express-fastify-open-redirect';
+import FastifyDOSCVE202122964 from './poc/express-fastify-dos';
+import { ApiFuzzer } from './api-fuzzer-poc-generic';
+import { BotFuzzer } from 'libs/databases/botFuzzer.database';
+import { ParsedPacket } from 'libs/databases/parsedPacket.database';
+import SQLiTimeBased from './poc/sqli-timebased';
+import Bluebird from 'bluebird';
 
 export default class ApiFuzzerSender {
+  private pocs: ApiFuzzer[];
+  private pocsName: string[];
 
-  constructor(options: BotPath, logger: ShadelessLogger) {
-    this.options = options;
+  constructor(options: BotFuzzer, packet: ParsedPacket) {
+    this.pocs = [
+      new ExpressFastifyOpenRedirect(options, packet),
+      new FastifyDOSCVE202122964(options, packet),
+      new SQLiTimeBased(options, packet),
+    ];
+    this.pocsName = this.pocs.map((v) => v.constructor.name);
   }
 
-  async sendAll(packet: PacketRequest): Promise<boolean> {
-    const requestsOptions = this.prepare(packet, currentPath);
-    const resps = await this.sendAllRequests(requestsOptions);
-    this.logger.log(
-      `Done ${requestsOptions.length}/${requestsOptions.length}: ${requestsOptions[0].baseURL}`,
+  async sendPocs(): Promise<string[]> {
+    const result = await Bluebird.map(
+      this.pocs,
+      async (poc) => {
+        if (poc.condition && !poc.condition()) return 0;
+        const res = await poc.poc();
+        const ok = (await poc.detect(res)) >= 0.5;
+        return ok;
+      },
+      { concurrency: 1 },
     );
-    return resps;
+    return result
+      .map((res, idx) => {
+        if (!res) return null;
+        return this.pocsName[idx];
+      })
+      .filter((r) => r !== null);
   }
 }

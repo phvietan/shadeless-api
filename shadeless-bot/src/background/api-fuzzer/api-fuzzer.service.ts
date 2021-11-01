@@ -1,8 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import * as Bluebird from 'bluebird';
+import ApiFuzzerSender from 'libs/api-fuzzer/api-fuzzer-sender';
 import AllDatabases from 'libs/databases/all.database';
 import { BotFuzzer } from 'libs/databases/botFuzzer.database';
-import ParsedPacketDb, { ParsedPacket } from 'libs/databases/parsedPacket.database';
+import ParsedPacketDb, {
+  ParsedPacket,
+} from 'libs/databases/parsedPacket.database';
+import { FuzzStatus } from 'libs/databases/parsedPath.database';
 import { sleep } from 'libs/helper';
 import ShadelessLogger from 'libs/logger/logger';
 
@@ -19,10 +23,12 @@ export class ApiFuzzerService {
       this.logger.log(`Found ${botFuzzerRunning.length} targets`);
       await Bluebird.map(botFuzzerRunning, async (botFuzzer) => {
         const project = await projectDb.getOneProjectByName(botFuzzer.project);
-        const fuzzPaths = await parsedPacketDb.getTodo(project);
-        await Bluebird.map(fuzzPaths, async (path) => {
-          this.logger.log(`Fuzzing path: ${path.origin}${path.path}`);
-          await this.runOne(botFuzzer, path);
+        const fuzzApis = await parsedPacketDb.getTodo(project);
+        await Bluebird.map(fuzzApis, async (parsedPacket) => {
+          this.logger.log(
+            `Fuzzing api: ${parsedPacket.origin}${parsedPacket.path}`,
+          );
+          await this.runOne(botFuzzer, parsedPacket);
         });
       });
       await sleep(5000);
@@ -36,44 +42,15 @@ export class ApiFuzzerService {
       parsedPacket.origin + parsedPacket.path + parsedPacket.hash,
     )}.txt`;
     await ParsedPacketDb.getInstance().update(
-      { _id: parsedPath._id },
+      { _id: parsedPacket._id },
       { status: FuzzStatus.SCANNING, logDir },
     );
 
-    const taskLogger = this.logger.spawn({ name: 'ApiFuzzer', logDir });
-    const pathFuzzerSender = new PathFuzzerSender(botPath, taskLogger);
-    const responses = await pathFuzzerSender.prepareAndSendAll(
-      await ParsedPacketDb.getInstance().getOneByRequestId(
-        parsedPath.requestPacketId,
-      ),
-      parsedPath.path,
+    const pathFuzzerSender = new ApiFuzzerSender(botFuzzer, parsedPacket);
+    const responses = await pathFuzzerSender.sendPocs();
+    await ParsedPacketDb.getInstance().update(
+      { _id: parsedPacket._id },
+      { status: FuzzStatus.DONE, result: responses },
     );
-    if (responses[0] === null) {
-      const error = 'Got error when GET random 404 page';
-      this.logger.log(error);
-      await ParsedPathDb.getInstance().update(
-        { _id: parsedPath._id },
-        {
-          status: FuzzStatus.DONE,
-          error,
-        },
-      );
-      return;
-    } else {
-      const result = await new PathFuzzerFilter(
-        responses.filter((res) => res !== null) as AxiosResponse<any>[],
-        taskLogger.setPrefix(
-          `Fuzzing path: ${parsedPath.origin}${parsedPath.path}`,
-        ),
-      ).filter();
-      await ParsedPathDb.getInstance().update(
-        { _id: parsedPath._id },
-        {
-          result: result.map((res) => res.config.url),
-          status: FuzzStatus.DONE,
-        },
-      );
-      this.logger.log('Done');
-    }
   }
 }

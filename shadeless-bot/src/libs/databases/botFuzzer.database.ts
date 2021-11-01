@@ -29,12 +29,12 @@ class BotFuzzerDb {
   async getOneByProject(project: string) {
     const document = await this.db.findOne({ project });
     if (!document) return undefined;
-    return document as any as BotPath;
+    return document as any as BotFuzzer;
   }
 
   async getRunningProject() {
     const documents = await this.db.find({ running: true }).toArray();
-    return documents as any as BotPath[];
+    return documents as any as BotFuzzer[];
   }
 }
 

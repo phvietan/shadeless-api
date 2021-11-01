@@ -36,6 +36,7 @@ type ParsedPacket struct {
 	Status      string   `json:"status" bson:"status"`
 	Result      []string `json:"result" bson:"result"`
 	StaticScore float64  `json:"staticScore" bson:"staticScore"`
+	LogDir      string   `json:"logDir" bson:"logDir"`
 
 	ResponseStatus           int               `json:"responseStatus" bson:"responseStatus"`
 	ResponseContentType      string            `json:"responseContentType" bson:"responseContentType"`
