@@ -9,6 +9,7 @@ import (
 
 	"github.com/kamva/mgm/v3"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -17,9 +18,11 @@ type IParsedPathDatabase interface {
 	IDatabase
 
 	Init() *ParsedPathDatabase
-	GetPathsByProjectAndOrigin(project string, origin string) []schema.ParsedPath
+	GetParsedPaths(filter bson.M) []schema.ParsedPath
 	GetMetadataByProject(project *schema.Project) ([]string, int, int, int, string)
 	Upsert(parsedPath *schema.ParsedPath) error
+
+	UpdateStatus(projectName string, id primitive.ObjectID, newStatus string) error
 }
 
 type ParsedPathDatabase struct {
@@ -51,7 +54,7 @@ func (this *ParsedPathDatabase) GetMetadataByProject(project *schema.Project) ([
 		fmt.Println("Error ParsedPath.GetMetadataByProject: project is nil")
 		return []string{}, 0, 0, 0, ""
 	}
-	filter := parseFilterOptionsFromProject(project)
+	filter := ParseFilterOptionsFromProject(project)
 	resultOrigins, err := this.db.Distinct(this.ctx, "origin", filter)
 	if err != nil {
 		fmt.Println("Error ParsedPath.GetMetadataByProject:", err)
@@ -72,31 +75,25 @@ func (this *ParsedPathDatabase) GetMetadataByProject(project *schema.Project) ([
 	}
 	delete(filter, "requestPacketId")
 
-	filter["status"] = schema.PathStatusDone
+	filter["status"] = schema.FuzzStatusDone
 	numScanned, err := this.db.CountDocuments(this.ctx, filter)
 	if err != nil {
 		fmt.Println("Error ParsedPath.GetMetadataByProject2", err)
 		return []string{}, 0, 0, 0, ""
 	}
 	botScanning := &schema.ParsedPath{}
-	filter["status"] = schema.PathStatusScanning
+	filter["status"] = schema.FuzzStatusScanning
 	this.db.FirstWithCtx(this.ctx, filter, botScanning)
 	return origins, int(numPaths), int(numScanned), int(numFound), botScanning.Origin + botScanning.Path
 }
 
-func (this *ParsedPathDatabase) GetPathsByProjectAndOrigin(project string, origin string) []schema.ParsedPath {
-	pipeline := []bson.M{
-		bson.M{"$match": bson.M{"project": project, "origin": origin}},
-	}
-	cursor, err := this.db.Aggregate(this.ctx, pipeline)
-	if err != nil {
-		fmt.Println("Error GetPacketsByOriginAndProject1", err)
-		return []schema.ParsedPath{}
-	}
+func (this *ParsedPathDatabase) GetParsedPaths(filter bson.M) []schema.ParsedPath {
+	findOptions := options.Find()
+	findOptions.SetSort(bson.D{{"updated_at", -1}})
 
 	results := []schema.ParsedPath{}
-	if err := cursor.All(this.ctx, &results); err != nil {
-		fmt.Println("Error GetPacketsByOriginAndProject2", err)
+	if err := this.db.SimpleFind(&results, filter, findOptions); err != nil {
+		fmt.Println("Error: GetParsedPaths", err)
 		return []schema.ParsedPath{}
 	}
 	return results
@@ -122,6 +119,17 @@ func (this *ParsedPathDatabase) Upsert(parsedPath *schema.ParsedPath) error {
 		"$set": bson.M{
 			"requestPacketId": parsedPath.RequestPacketId,
 		},
+	})
+	return err
+}
+
+func (this *ParsedPathDatabase) UpdateStatus(projectName string, id primitive.ObjectID, newStatus string) error {
+	if newStatus != schema.FuzzStatusRemoved && newStatus != schema.FuzzStatusTodo {
+		return errors.New("ParsedPath status is wrong")
+	}
+	filter := bson.M{"project": projectName, "_id": id}
+	_, err := this.db.UpdateOne(this.ctx, filter, bson.M{
+		"$set": bson.M{"status": newStatus},
 	})
 	return err
 }

@@ -6,12 +6,15 @@ import { BotFuzzer } from 'libs/databases/botFuzzer.database';
 import { ParsedPacket } from 'libs/databases/parsedPacket.database';
 import SQLiTimeBased from './poc/sqli-timebased';
 import Bluebird from 'bluebird';
+import { sleep } from 'libs/helper';
 
 export default class ApiFuzzerSender {
+  options: BotFuzzer;
   private pocs: ApiFuzzer[];
   private pocsName: string[];
 
   constructor(options: BotFuzzer, packet: ParsedPacket) {
+    this.options = options;
     this.pocs = [
       new ExpressFastifyOpenRedirect(options, packet),
       new FastifyDOSCVE202122964(options, packet),
@@ -27,6 +30,7 @@ export default class ApiFuzzerSender {
         if (poc.condition && !poc.condition()) return 0;
         const res = await poc.poc();
         const ok = (await poc.detect(res)) >= 0.5;
+        await sleep(this.options.sleepRequest);
         return ok;
       },
       { concurrency: 1 },

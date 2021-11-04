@@ -21,7 +21,7 @@ export class ConfigService {
       bindAddress: process.env.BIND_ADDRESS,
       frontendUrl: process.env.FRONTEND_URL,
       wordlistDir,
-      wordlistFile: path.join(wordlist, 'dir_test.txt'),
+      wordlistFile: path.join(wordlistDir, 'dir_test.txt'),
       bodyDir: path.join(__dirname, '../../../files/'),
     };
   }

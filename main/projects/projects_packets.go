@@ -9,21 +9,8 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
-
-type metaData struct {
-	Origins             []string          `json:"origins"`
-	Parameters          []string          `json:"parameters"`
-	ReflectedParameters map[string]string `json:"reflectedParameters"`
-}
-
-func NewMetaData(origins []string, parameters []string, reflectedParameters map[string]string) *metaData {
-	return &metaData{
-		Origins:             origins,
-		Parameters:          parameters,
-		ReflectedParameters: reflectedParameters,
-	}
-}
 
 func PacketsRoutes(route *gin.Engine) {
 	projects := route.Group("/projects/:projectName")
@@ -32,7 +19,34 @@ func PacketsRoutes(route *gin.Engine) {
 		projects.GET("/metadata", getProjectMetadata)
 		projects.GET("/packets", getPacketsByOrigin)
 		projects.GET("/timeTravel", getTimeTravel)
+		projects.GET("/fuzzing_packets/api", getFuzzingPacketsApi)
+		projects.GET("/fuzzing_packets/static", getFuzzingPacketsStatic)
+		projects.PUT("/fuzzing_packets/:id/score", putFuzzingPacketScore)
 	}
+}
+
+type putFuzzingPacketScoreObj struct {
+	Score float64 `json:"score"`
+}
+
+func putFuzzingPacketScore(c *gin.Context) {
+	id, err := primitive.ObjectIDFromHex(c.Param("id"))
+	if err != nil {
+		responser.ResponseError(c, err)
+		return
+	}
+	newScore := new(putFuzzingPacketScoreObj)
+	if err := c.BindJSON(newScore); err != nil {
+		fmt.Println("Cannot bindJSON newScore object: ", err)
+		responser.ResponseError(c, err)
+		return
+	}
+	var parsedPacketDb database.IParsedPacketDatabase = new(database.ParsedPacketDatabase).Init()
+	if err := parsedPacketDb.UpdateParsedPacketScore(id, newScore.Score); err != nil {
+		responser.ResponseError(c, err)
+		return
+	}
+	responser.ResponseOk(c, "Successfully update score")
 }
 
 func getProjectByName(c *gin.Context) {
@@ -55,8 +69,43 @@ func getProjectMetadata(c *gin.Context) {
 	}
 	var parsedPacketDb database.IParsedPacketDatabase = new(database.ParsedPacketDatabase).Init()
 	origins, parameters, reflectedParameters := parsedPacketDb.GetMetadataByProject(project)
-	metaData := NewMetaData(origins, parameters, reflectedParameters)
-	responser.ResponseOk(c, metaData)
+
+	result := make(map[string]interface{})
+	result["origins"] = origins
+	result["parameters"] = parameters
+	result["reflectedParameters"] = reflectedParameters
+	responser.ResponseOk(c, result)
+}
+
+func getFuzzingPacketsApi(c *gin.Context) {
+	projectName := c.Param("projectName")
+	var projectDb database.IProjectDatabase = new(database.ProjectDatabase).Init()
+	project := projectDb.GetOneProjectByName(projectName)
+	if project == nil {
+		responser.Response404(c, "No such project")
+	}
+
+	var packetDb database.IParsedPacketDatabase = new(database.ParsedPacketDatabase).Init()
+	done, scanning, todo := packetDb.GetFuzzingPacketsApi(project)
+
+	result := make(map[string]interface{})
+	result["done"] = done
+	result["scanning"] = scanning
+	result["todo"] = todo
+	responser.ResponseOk(c, result)
+}
+
+func getFuzzingPacketsStatic(c *gin.Context) {
+	projectName := c.Param("projectName")
+	var projectDb database.IProjectDatabase = new(database.ProjectDatabase).Init()
+	project := projectDb.GetOneProjectByName(projectName)
+	if project == nil {
+		responser.Response404(c, "No such project")
+	}
+
+	var packetDb database.IParsedPacketDatabase = new(database.ParsedPacketDatabase).Init()
+	packets := packetDb.GetFuzzingPacketsStatic(project)
+	responser.ResponseOk(c, packets)
 }
 
 func getPacketsByOrigin(c *gin.Context) {

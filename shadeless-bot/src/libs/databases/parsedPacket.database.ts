@@ -57,6 +57,7 @@ class ParsedPacketDb {
     const documents = await this.db
       .find({
         status: FuzzStatus.TODO,
+        staticScore: { $lte: 50 },
         ...filter,
       })
       .sort({ created_at: 1 })

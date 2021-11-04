@@ -2,13 +2,11 @@ import ApiFuzzerPocGeneric, {
   ApiFuzzer,
   MyAxiosResponse,
 } from '../api-fuzzer-poc-generic';
-import { AxiosResponse } from 'axios';
 import { BotFuzzer } from 'libs/databases/botFuzzer.database';
 import { ParsedPacket } from 'libs/databases/parsedPacket.database';
 import { ConfigService } from 'config/config.service';
-import path from 'path';
-import fs from 'fs';
-import * as Bluebird from 'bluebird';
+import * as path from 'path';
+import * as fs from 'fs';
 
 const f = fs
   .readFileSync(

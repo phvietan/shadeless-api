@@ -21,9 +21,10 @@ type ParsedPath struct {
 }
 
 const (
-	PathStatusTodo     = "todo"
-	PathStatusScanning = "scanning"
-	PathStatusDone     = "done"
+	FuzzStatusTodo     = "todo"
+	FuzzStatusScanning = "scanning"
+	FuzzStatusDone     = "done"
+	FuzzStatusRemoved  = "removed"
 )
 
 func NewParsedPath(packet *ParsedPacket, path string) *ParsedPath {
@@ -31,7 +32,7 @@ func NewParsedPath(packet *ParsedPacket, path string) *ParsedPath {
 		Project:         packet.Project,
 		Origin:          packet.Origin,
 		Path:            path,
-		Status:          PathStatusTodo,
+		Status:          FuzzStatusTodo,
 		RequestPacketId: packet.RequestPacketId,
 		LogDir:          "",
 		Error:           "",

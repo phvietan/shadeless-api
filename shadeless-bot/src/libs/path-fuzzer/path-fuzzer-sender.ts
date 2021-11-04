@@ -82,7 +82,7 @@ export default class PathFuzzerSender {
     return Bluebird.map(
       requestsOptions,
       async (opt) => {
-        sleep(this.options.sleepRequest);
+        await sleep(this.options.sleepRequest);
         cnt += 1;
         if (cnt % 30 === 0) {
           this.logger.log(

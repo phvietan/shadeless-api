@@ -9,6 +9,7 @@ import (
 
 	"github.com/kamva/mgm/v3"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -21,6 +22,10 @@ type IParsedPacketDatabase interface {
 	GetMetadataByProject(project *schema.Project) ([]string, []string, map[string]string)
 	GetPacketsByOriginAndProject(projectName string, origin string) []schema.ParsedPacket
 	GetParsedByRawPackets(project string, packets []schema.Packet) []schema.ParsedPacket
+
+	UpdateParsedPacketScore(id primitive.ObjectID, newScore float64) error
+	GetFuzzingPacketsApi(project *schema.Project) ([]schema.ParsedPacket, []schema.ParsedPacket, []schema.ParsedPacket)
+	GetFuzzingPacketsStatic(project *schema.Project) []schema.ParsedPacket
 }
 
 type ParsedPacketDatabase struct {
@@ -43,6 +48,66 @@ func (this *ParsedPacketDatabase) Init() *ParsedPacketDatabase {
 		os.Exit(0)
 	}
 	return this
+}
+
+func (this *ParsedPacketDatabase) UpdateParsedPacketScore(id primitive.ObjectID, newScore float64) error {
+	_, err := this.db.UpdateByID(this.ctx, id, bson.M{
+		"$set": bson.M{
+			"staticScore": newScore,
+		},
+	})
+	return err
+}
+
+func (this *ParsedPacketDatabase) GetFuzzingPacketsApi(project *schema.Project) ([]schema.ParsedPacket, []schema.ParsedPacket, []schema.ParsedPacket) {
+	if project == nil {
+		fmt.Println("Error project is nil")
+		return []schema.ParsedPacket{}, []schema.ParsedPacket{}, []schema.ParsedPacket{}
+	}
+	findOptions := options.Find()
+	findOptions.SetSort(bson.D{{"updated_at", -1}})
+	filter := ParseFilterOptionsFromProject(project)
+	filter["staticScore"] = bson.M{"$lte": 50}
+
+	filter["status"] = schema.FuzzStatusDone
+	done := []schema.ParsedPacket{}
+	if err := this.db.SimpleFind(&done, filter, findOptions); err != nil {
+		fmt.Println(err)
+		return []schema.ParsedPacket{}, []schema.ParsedPacket{}, []schema.ParsedPacket{}
+	}
+
+	filter["status"] = schema.FuzzStatusScanning
+	scanning := []schema.ParsedPacket{}
+	if err := this.db.SimpleFind(&scanning, filter, findOptions); err != nil {
+		fmt.Println(err)
+		return []schema.ParsedPacket{}, []schema.ParsedPacket{}, []schema.ParsedPacket{}
+	}
+
+	filter["status"] = schema.FuzzStatusTodo
+	todo := []schema.ParsedPacket{}
+	if err := this.db.SimpleFind(&todo, filter, findOptions); err != nil {
+		fmt.Println(err)
+		return []schema.ParsedPacket{}, []schema.ParsedPacket{}, []schema.ParsedPacket{}
+	}
+	return done, scanning, todo
+}
+
+func (this *ParsedPacketDatabase) GetFuzzingPacketsStatic(project *schema.Project) []schema.ParsedPacket {
+	if project == nil {
+		fmt.Println("Error project is nil")
+		return []schema.ParsedPacket{}
+	}
+	findOptions := options.Find()
+	findOptions.SetSort(bson.D{{"updated_at", -1}})
+	filter := ParseFilterOptionsFromProject(project)
+	filter["staticScore"] = bson.M{"$gt": 50}
+
+	results := []schema.ParsedPacket{}
+	if err := this.db.SimpleFind(&results, filter, findOptions); err != nil {
+		fmt.Println(err)
+		return []schema.ParsedPacket{}
+	}
+	return results
 }
 
 func (this *ParsedPacketDatabase) Upsert(packet *schema.ParsedPacket) error {
@@ -69,7 +134,7 @@ func (this *ParsedPacketDatabase) Upsert(packet *schema.ParsedPacket) error {
 	return err
 }
 
-func parseFilterOptionsFromProject(project *schema.Project) bson.M {
+func ParseFilterOptionsFromProject(project *schema.Project) bson.M {
 	blacklistExact := make([]string, 0)
 	blacklistRegex := ""
 	for _, bl := range project.Blacklist {
@@ -105,7 +170,7 @@ func (this *ParsedPacketDatabase) GetMetadataByProject(project *schema.Project) 
 	if project == nil {
 		return []string{}, []string{}, make(map[string]string)
 	}
-	filter := parseFilterOptionsFromProject(project)
+	filter := ParseFilterOptionsFromProject(project)
 	resultOrigins, err := this.db.Distinct(this.ctx, "origin", filter)
 	if err != nil {
 		fmt.Println("Cannot get origins in metadata by project: ", err)

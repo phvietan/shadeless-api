@@ -17,9 +17,10 @@ func spawnApp() *gin.Engine {
 
 	router.Use(setHeaderOctetStream())
 	router.Static("/files", "../files")
-
 	router.Use(setHeaderForApi())
 	router.Use(handleOptionsMethod())
+	router.Static("/logs", "../shadeless-bot/logs")
+
 	router.GET("/healthcheck", healthCheckHandler)
 
 	burp.Routes(router)

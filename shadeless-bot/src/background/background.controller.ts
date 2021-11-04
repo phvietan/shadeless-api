@@ -4,6 +4,8 @@ import { Controller } from '@nestjs/common';
 import AllDatabases from 'libs/databases/all.database';
 import ShadelessLogger from 'libs/logger/logger';
 import { PathFuzzerService } from './path-fuzzer/path-fuzzer.service';
+import * as Bluebird from 'bluebird';
+import { ApiFuzzerService } from './api-fuzzer/api-fuzzer.service';
 
 @Controller('background')
 export class BackgroundController {
@@ -12,6 +14,7 @@ export class BackgroundController {
   constructor(
     private configService: ConfigService,
     private pathFuzzerService: PathFuzzerService,
+    private apiFuzzerService: ApiFuzzerService,
   ) {
     this.logger.log('Initialized BackgroundController');
     this.bootstrapBackground();
@@ -31,6 +34,9 @@ export class BackgroundController {
 
   async bootstrapBackground() {
     await this.bootstrapDatabases();
-    await Promise.all([this.pathFuzzerService.runForever()]);
+    await Bluebird.all([
+      // this.pathFuzzerService.runForever(),
+      this.apiFuzzerService.runForever(),
+    ]);
   }
 }
