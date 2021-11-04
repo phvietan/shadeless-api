@@ -34,19 +34,19 @@ func switchBotFuzzerRunning(c *gin.Context) {
 	projectName := c.Param("projectName")
 
 	var BotFuzzerDb database.IBotFuzzerDatabase = new(database.BotFuzzerDatabase).Init()
-	BotFuzzer := BotFuzzerDb.GetBotFuzzerByProject(projectName)
-	if BotFuzzer == nil {
+	botFuzzer := BotFuzzerDb.GetBotFuzzerByProject(projectName)
+	if botFuzzer == nil {
 		responser.Response404(c, "BotFuzzer not found")
 		return
 	}
 
-	if err := BotFuzzerDb.SwitchRun(BotFuzzer); err != nil {
+	if err := BotFuzzerDb.SwitchRun(botFuzzer); err != nil {
 		responser.ResponseError(c, err)
 		return
 	}
-	msg := "Bot path set to running"
-	if BotFuzzer.Running == true {
-		msg = "Bot path stop running"
+	msg := "Bot fuzzer set to running"
+	if botFuzzer.Running == true {
+		msg = "Bot fuzzer stop running"
 	}
 	responser.ResponseOk(c, msg)
 }
@@ -70,5 +70,5 @@ func putBotFuzzerByProject(c *gin.Context) {
 		responser.ResponseError(c, err)
 		return
 	}
-	responser.ResponseOk(c, "Sucessfully update bot_path")
+	responser.ResponseOk(c, "Sucessfully update bot fuzzer")
 }

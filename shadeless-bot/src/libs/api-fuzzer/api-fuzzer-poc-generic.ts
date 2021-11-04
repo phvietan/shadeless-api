@@ -17,11 +17,13 @@ import {
 } from 'libs/helper';
 import ShadelessLogger from 'libs/logger/logger';
 import { ConfigService } from 'config/config.service';
-import path from 'path';
+import * as path from 'path';
 import { BotFuzzer } from 'libs/databases/botFuzzer.database';
 import { ParsedPacket } from 'libs/databases/parsedPacket.database';
-import qs from 'qs';
+import * as qs from 'qs';
 export interface ApiFuzzer {
+  logDir: string;
+
   condition?: () => Promise<boolean>;
   poc: () => Promise<any>;
   detect: (resp: any) => Promise<number>;
@@ -31,34 +33,27 @@ export type MyAxiosResponse = AxiosResponse & { timetook: number };
 
 // TODO: push wordlist dir into BotPath
 export default class ApiFuzzerPocGeneric {
+  logDir: string;
   options: BotFuzzer;
   logger: ShadelessLogger;
   packet: ParsedPacket;
 
   constructor(options: BotFuzzer, packet: ParsedPacket, name: string) {
-    const logDir = `logs/api/${
-      options.project
-    }/${ShadelessLogger.sanitizeLogDir(
+    this.logDir = `logs/api/${options.project}/${ShadelessLogger.sanitizeLogDir(
       packet.origin + packet.path + packet.hash,
     )}/${name}.txt`;
 
     this.options = options;
     const logger = new ShadelessLogger({
       name,
-      logDir,
+      logDir: this.logDir,
       prefix: name,
     });
     this.packet = packet;
     this.logger = logger;
   }
 
-  static queryStringToObject(params: string) {
-    return JSON.parse(
-      '{"' + decodeURI(params.replace(/&/g, '","').replace(/=/g, '":"')) + '"}',
-    );
-  }
-
-  resultObjPayload: any[];
+  resultObjPayload: any[] = [];
   private recursiveSubstitutePayloadToObj(
     rootObj: any,
     obj: any,
@@ -89,7 +84,7 @@ export default class ApiFuzzerPocGeneric {
     const body = await fs.readFile(
       path.join(conf.bodyDir, packet.project, packet.requestBodyHash),
     );
-    const params = ApiFuzzerPocGeneric.queryStringToObject(packet.querystring);
+    const params = qs.parse(packet.querystring);
     return {
       method: packet.method as Method,
       params,
@@ -205,7 +200,7 @@ export default class ApiFuzzerPocGeneric {
         if (cnt % 30 === 0) {
           this.logger.log(`Done ${cnt}/${wordlist.length}: ${word}`);
         }
-        const resps = await this.sendAllQuerystringInValue(opt, word);
+        const resps = await this.sendAllBodyInValue(opt, word);
         result = [...result, ...resps];
       },
       { concurrency: this.options.asyncRequest },

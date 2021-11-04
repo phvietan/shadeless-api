@@ -8,7 +8,7 @@ import { ConfigService } from 'config/config.service';
 import * as path from 'path';
 import * as fs from 'fs';
 
-const f = fs
+const fSleep = fs
   .readFileSync(
     path.join(
       new ConfigService().getConfig().wordlistDir,
@@ -17,7 +17,7 @@ const f = fs
     'utf-8',
   )
   .trim();
-const wordlist = f.split('\n');
+const wordlistSleep = fSleep.split('\n');
 
 export default class SQLiTimeBased
   extends ApiFuzzerPocGeneric
@@ -29,13 +29,16 @@ export default class SQLiTimeBased
 
   async poc() {
     const opt = await this.getAxiosOptionsFromPacket(this.packet);
-    const resBody = await this.sendAllBodyInValueWordlist(opt, wordlist);
-    const resQs = await this.sendAllQuerystringInValueWordlist(opt, wordlist);
+    const resBody = await this.sendAllBodyInValueWordlist(opt, wordlistSleep);
+    const resQs = await this.sendAllQuerystringInValueWordlist(
+      opt,
+      wordlistSleep,
+    );
     return [...resBody, ...resQs];
   }
 
   async detect(res: MyAxiosResponse[]) {
-    this.logger.setPrefix('SQLI-timebased:');
+    this.logger.setPrefix('RCE-timebased:');
     this.logger.log('Running');
     let cntOver4000 = 0;
     let cntNull = 0;

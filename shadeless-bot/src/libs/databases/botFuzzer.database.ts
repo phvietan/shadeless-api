@@ -13,7 +13,7 @@ class BotFuzzerDb {
   private static instance?: BotFuzzerDb = undefined;
 
   constructor(dbo: Db) {
-    this.db = dbo.collection('bot_paths');
+    this.db = dbo.collection('bot_fuzzers');
   }
 
   static getInstance(dbo?: Db): BotFuzzerDb {

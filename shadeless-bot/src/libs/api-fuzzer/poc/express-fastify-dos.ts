@@ -28,13 +28,15 @@ export default class FastifyDOSCVE202122964
   }
 
   async detect(res: AxiosResponse) {
-    this.logger.setPrefix('Detection FastifyDOSCVE202122964:');
+    this.logger.setPrefix('FastifyDOSCVE202122964');
+    this.logger.log('Running');
     const res1 = res[0];
     const res2 = res[0];
     if (res1 === null && res2 === null) {
       this.logger.log('Detected');
       return 1;
     }
+    this.logger.log('Not detected');
     return 0;
   }
 }

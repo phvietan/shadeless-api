@@ -22,7 +22,7 @@ export class PathFuzzerService {
     await parsedPathDb.resetScanning();
     while (true) {
       const botPathRunning = await botPathDb.getRunningProject();
-      this.logger.log(`Found ${botPathRunning.length} targets`);
+      this.logger.log(`[BotPath]: Found ${botPathRunning.length} targets`);
       await Bluebird.map(botPathRunning, async (botPath) => {
         const project = await projectDb.getOneProjectByName(botPath.project);
         const fuzzPaths = await parsedPathDb.getTodo(project);

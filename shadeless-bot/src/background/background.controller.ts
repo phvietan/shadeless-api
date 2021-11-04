@@ -35,7 +35,7 @@ export class BackgroundController {
   async bootstrapBackground() {
     await this.bootstrapDatabases();
     await Bluebird.all([
-      // this.pathFuzzerService.runForever(),
+      this.pathFuzzerService.runForever(),
       this.apiFuzzerService.runForever(),
     ]);
   }

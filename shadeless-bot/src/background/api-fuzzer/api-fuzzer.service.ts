@@ -9,7 +9,7 @@ import ParsedPacketDb, {
 import { FuzzStatus } from 'libs/databases/parsedPath.database';
 import { sleep } from 'libs/helper';
 import ShadelessLogger from 'libs/logger/logger';
-
+import * as fs from 'fs/promises';
 @Injectable()
 export class ApiFuzzerService {
   logger = new ShadelessLogger();
@@ -20,7 +20,7 @@ export class ApiFuzzerService {
     await parsedPacketDb.resetScanning();
     while (true) {
       const botFuzzerRunning = await botFuzzerDb.getRunningProject();
-      this.logger.log(`Found ${botFuzzerRunning.length} targets`);
+      this.logger.log(`[Fuzzer]: Found ${botFuzzerRunning.length} targets`);
       await Bluebird.map(botFuzzerRunning, async (botFuzzer) => {
         const project = await projectDb.getOneProjectByName(botFuzzer.project);
         const fuzzApis = await parsedPacketDb.getTodo(project);
@@ -40,14 +40,15 @@ export class ApiFuzzerService {
       botFuzzer.project
     }/${ShadelessLogger.sanitizeLogDir(
       parsedPacket.origin + parsedPacket.path + parsedPacket.hash,
-    )}.txt`;
+    )}/logs.txt`;
     await ParsedPacketDb.getInstance().update(
       { _id: parsedPacket._id },
       { status: FuzzStatus.SCANNING, logDir },
     );
 
     const pathFuzzerSender = new ApiFuzzerSender(botFuzzer, parsedPacket);
-    const responses = await pathFuzzerSender.sendPocs();
+    const [logs, responses] = await pathFuzzerSender.sendPocs();
+    await fs.writeFile(logDir, logs);
     await ParsedPacketDb.getInstance().update(
       { _id: parsedPacket._id },
       { status: FuzzStatus.DONE, result: responses },
