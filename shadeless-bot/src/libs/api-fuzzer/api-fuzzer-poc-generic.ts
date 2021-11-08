@@ -104,11 +104,11 @@ export default class ApiFuzzerPocGeneric {
       withCredentials: true,
       responseType: 'text',
       transformResponse: [(data) => data],
-      baseURL: packet.origin,
-      url: packet.path,
+      url: `${packet.origin}${packet.path}`,
       timeout: this.options.timeout,
       headers: getHeaderMapFromHeaders(packet.requestHeaders),
       data: body,
+      maxRedirects: 0,
     };
   }
 

@@ -11,23 +11,16 @@ export default class ExpressFastifyOpenRedirect
     super(botFuzzer, packet, ExpressFastifyOpenRedirect.name);
   }
 
-  async send() {
+  async poc() {
     const opt = await this.getAxiosOptionsFromPacket(this.packet);
     let { url } = opt;
     if (url[url.length - 1] !== '/') url += '/';
     opt.method = 'GET';
     opt.url = url + '/google.com/%2e%2e'; // GET to -> <host>//google.com/%2e%2e
-    return this.sendOneRequest(opt);
-  }
+    const response = await this.sendOneRequest(opt);
 
-  async poc() {
-    const responses = await this.send();
-    return this.detect(responses);
-  }
-
-  async detect(res: AxiosResponse) {
-    if (res && res.status >= 300 && res.status < 400) {
-      if (res.headers['location'].includes('//google.com')) {
+    if (response && response.status >= 300 && response.status < 400) {
+      if (response.headers['location'].includes('//google.com')) {
         this.logger.log('Found bug');
         return 1;
       }

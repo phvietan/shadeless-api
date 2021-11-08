@@ -29,14 +29,14 @@ export default class SQLiTimeBased
 
   async poc() {
     const opt = await this.getAxiosOptionsFromPacket(this.packet);
+    this.logger.log('Substituting in body for SQLi time based');
     const resBody = await this.sendAllBodyInValueWordlist(opt, wordlist);
+    this.logger.log('Substituting in querystring for SQLi time based');
     const resQs = await this.sendAllQuerystringInValueWordlist(opt, wordlist);
-    return [...resBody, ...resQs];
+    return this.detect([...resBody, ...resQs]);
   }
 
   async detect(res: MyAxiosResponse[]) {
-    this.logger.setPrefix('SQLI-timebased:');
-    this.logger.log('Running');
     let cntOver4000 = 0;
     let cntNull = 0;
     res.forEach((r) => {
