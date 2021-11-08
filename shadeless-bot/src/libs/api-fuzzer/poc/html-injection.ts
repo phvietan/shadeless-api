@@ -1,5 +1,4 @@
 import ApiFuzzerPocGeneric, { ApiFuzzer } from '../api-fuzzer-poc-generic';
-import { AxiosResponse } from 'axios';
 import { BotFuzzer } from 'libs/databases/botFuzzer.database';
 import { ParsedPacket } from 'libs/databases/parsedPacket.database';
 import * as fs from 'fs/promises';
@@ -16,7 +15,7 @@ export default class HtmlInjection
   }
 
   async condition() {
-    return Object.keys(this.packet.reflectedParameters).length > 0;
+    return this.packet.responseContentType.includes('html');
   }
 
   async poc() {
@@ -24,7 +23,7 @@ export default class HtmlInjection
       path.join(new ConfigService().getConfig().wordlistDir, 'html_inject.txt'),
       'utf-8',
     );
-    const wordlist = fHtmlInjection.split('\n');
+    const wordlist = fHtmlInjection.trim().split('\n');
     const payload = wordlist.map((w) => w.replace(/{random}/g, randomHex(10)));
 
     const opt = await this.getAxiosOptionsFromPacket(this.packet);
@@ -36,6 +35,8 @@ export default class HtmlInjection
     const responses = [...resQs, ...resBody];
     for (let i = 0; i < responses.length; i++) {
       if (responses[i] === null) continue;
+      const contentType = responses[i].headers['content-type'] || '';
+      if (!contentType.includes('html')) continue;
       const data = responses[i].data as string;
       for (let j = 0; j < payload.length; j++) {
         if (data.includes(payload[j])) {

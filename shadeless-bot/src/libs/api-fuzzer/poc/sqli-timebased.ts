@@ -48,15 +48,15 @@ export default class SQLiTimeBased
       }
     });
     if (cntNull < 5 && cntOver4000 > 0) {
-      this.logger.log('Detected, server is quite stable, null < 5');
+      this.logger.log('Found bug, server is quite stable, null < 5');
       return 1;
     }
     if (cntNull < 40 && cntOver4000 > 0) {
-      this.logger.log('Detected, Server is not so stable 1, 5 < null < 40');
+      this.logger.log('Found bug, Server is not so stable 1, 5 < null < 40');
       return 0.7;
     }
     if (cntNull < 100 && cntOver4000 > 0) {
-      this.logger.log('Detected, Server is not so stable 2, 40 < null < 100');
+      this.logger.log('Found bug, Server is not so stable 2, 40 < null < 100');
     }
     if (cntNull >= 100)
       this.logger.log('Server is not stable at all, null > 100');

@@ -51,15 +51,15 @@ export default class RCEInputNoSanitize
       }
     });
     if (cntNull < 5 && cntOver4000 > 0) {
-      this.logger.log('Detected, server is quite stable, null < 5');
+      this.logger.log('Found bug, server is quite stable, null < 5');
       return 1;
     }
     if (cntNull < 40 && cntOver4000 > 0) {
-      this.logger.log('Detected, Server is not so stable 1, 5 < null < 40');
+      this.logger.log('Found bug, Server is not so stable 1, 5 < null < 40');
       return 0.7;
     }
     if (cntNull < 100 && cntOver4000 > 0) {
-      this.logger.log('Detected, Server is not so stable 2, 40 < null < 100');
+      this.logger.log('Found bug, Server is not so stable 2, 40 < null < 100');
     }
     if (cntNull >= 100)
       this.logger.log('Server is not stable at all, null > 100');
@@ -71,7 +71,6 @@ export default class RCEInputNoSanitize
 
   async pocCatEtcPasswd() {
     const opt = await this.getAxiosOptionsFromPacket(this.packet);
-    console.log(wordlistEtcPasswd);
     const resBody = await this.sendAllBodyInValueWordlist(
       opt,
       wordlistEtcPasswd,
@@ -84,6 +83,7 @@ export default class RCEInputNoSanitize
     for (let i = 0; i < responses.length; i++) {
       if (responses[i] === null) continue;
       if (this.isEtcPasswd(responses[i].data as string)) {
+        this.logger.log('Found bug RCE via etc/passwd');
         return 1;
       }
     }

@@ -17,7 +17,6 @@ export default class ExpressFastifyOpenRedirect
     if (url[url.length - 1] !== '/') url += '/';
     opt.method = 'GET';
     opt.url = url + '/google.com/%2e%2e'; // GET to -> <host>//google.com/%2e%2e
-    console.log(opt);
     return this.sendOneRequest(opt);
   }
 
@@ -29,7 +28,7 @@ export default class ExpressFastifyOpenRedirect
   async detect(res: AxiosResponse) {
     if (res && res.status >= 300 && res.status < 400) {
       if (res.headers['location'].includes('//google.com')) {
-        this.logger.log('Detected');
+        this.logger.log('Found bug');
         return 1;
       }
     }

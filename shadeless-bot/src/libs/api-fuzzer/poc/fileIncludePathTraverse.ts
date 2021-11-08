@@ -37,7 +37,7 @@ export default class FileInclusionPathTraverse
       const r = responses[i];
       if (r === null) continue;
       if (this.isEtcPasswd(r.data as string)) {
-        this.logger.log('Detected LFI');
+        this.logger.log('Found bug LFI');
         return 1;
       }
     }

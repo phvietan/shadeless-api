@@ -20,12 +20,12 @@ export default class ApiFuzzerSender {
   constructor(options: BotFuzzer, packet: ParsedPacket) {
     this.options = options;
     this.pocs = [
-      // new ExpressFastifyOpenRedirect(options, packet),
-      // new FastifyDOSCVE202122964(options, packet),
-      // new SQLiTimeBased(options, packet),
+      new ExpressFastifyOpenRedirect(options, packet),
+      new FastifyDOSCVE202122964(options, packet),
+      new SQLiTimeBased(options, packet),
       new HtmlInjection(options, packet),
       new RCEInputNoSanitize(options, packet),
-      // new FileInclusionPathTraverse(options, packet),
+      new FileInclusionPathTraverse(options, packet),
       // new AutoArjun(options, packet),
     ];
     this.pocsName = this.pocs.map((v) => v.constructor.name);

@@ -25,7 +25,7 @@ export default class FastifyDOSCVE202122964
 
     // Detect
     if (res1 === null && res2 === null) {
-      this.logger.log('Detected');
+      this.logger.log('Found bug');
       return 1;
     }
     this.logger.log('Not detected');
