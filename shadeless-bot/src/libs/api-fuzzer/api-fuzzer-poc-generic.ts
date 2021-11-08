@@ -65,7 +65,7 @@ export default class ApiFuzzerPocGeneric {
         if (reflectedParameters && !(key in reflectedParameters)) continue;
         const tmp = obj[key];
         obj[key] = payload;
-        this.resultObjPayload.push(rootObj);
+        this.resultObjPayload.push(Object.assign({}, rootObj));
         obj[key] = tmp;
       }
       if (isArray(obj[key]) || isObject(obj[key])) {
@@ -79,6 +79,7 @@ export default class ApiFuzzerPocGeneric {
     payload: string,
     reflectedParameters?: Record<string, string>,
   ): any[] {
+    this.resultObjPayload = [];
     this.recursiveSubstitutePayloadToObj(
       obj,
       obj,
@@ -181,7 +182,11 @@ export default class ApiFuzzerPocGeneric {
     );
     return Bluebird.map(listParamsWithPayload, async (data) => {
       const newOpt = Object.assign({}, opt);
-      newOpt.data = data;
+      if (contentType.includes('x-www-form-urlencoded')) {
+        newOpt.data = qs.stringify(data);
+      } else {
+        newOpt.data = data;
+      }
       return this.sendOneRequest(newOpt);
     });
   }

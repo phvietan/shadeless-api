@@ -1,11 +1,9 @@
 import ApiFuzzerPocGeneric, { ApiFuzzer } from '../api-fuzzer-poc-generic';
-import { AxiosResponse } from 'axios';
 import { BotFuzzer } from 'libs/databases/botFuzzer.database';
 import { ParsedPacket } from 'libs/databases/parsedPacket.database';
 import * as fs from 'fs';
 import * as path from 'path';
 import { ConfigService } from 'config/config.service';
-import { randomHex } from 'libs/helper';
 
 const lfiF = fs
   .readFileSync(
@@ -37,7 +35,7 @@ export default class FileInclusionPathTraverse
 
     for (let i = 0; i < responses.length; i += 1) {
       const r = responses[i];
-      if (r === null) return;
+      if (r === null) continue;
       if (this.isEtcPasswd(r.data as string)) {
         this.logger.log('Detected LFI');
         return 1;

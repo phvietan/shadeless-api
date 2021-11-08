@@ -71,6 +71,7 @@ export default class RCEInputNoSanitize
 
   async pocCatEtcPasswd() {
     const opt = await this.getAxiosOptionsFromPacket(this.packet);
+    console.log(wordlistEtcPasswd);
     const resBody = await this.sendAllBodyInValueWordlist(
       opt,
       wordlistEtcPasswd,
