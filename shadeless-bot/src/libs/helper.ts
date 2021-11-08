@@ -54,3 +54,10 @@ export function isObject(value: any): boolean {
   }
   return false;
 }
+
+export function getHeaders(headers: string[]): string {
+  return headers.slice(1).reduce((before, header) => {
+    if (header.toLowerCase().includes('content-length')) return before;
+    return before + header + '\n';
+  });
+}

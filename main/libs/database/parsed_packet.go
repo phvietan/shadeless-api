@@ -26,6 +26,9 @@ type IParsedPacketDatabase interface {
 	UpdateParsedPacketScore(id primitive.ObjectID, newScore float64) error
 	GetFuzzingPacketsApi(project *schema.Project) ([]schema.ParsedPacket, []schema.ParsedPacket, []schema.ParsedPacket)
 	GetFuzzingPacketsStatic(project *schema.Project) []schema.ParsedPacket
+
+	GetOneById(id primitive.ObjectID) (*schema.ParsedPacket, error)
+	ResetStatus(id primitive.ObjectID) error
 }
 
 type ParsedPacketDatabase struct {
@@ -48,6 +51,24 @@ func (this *ParsedPacketDatabase) Init() *ParsedPacketDatabase {
 		os.Exit(0)
 	}
 	return this
+}
+
+func (this *ParsedPacketDatabase) GetOneById(id primitive.ObjectID) (*schema.ParsedPacket, error) {
+	result := new(schema.ParsedPacket)
+	if err := this.db.FindByID(id, result); err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func (this *ParsedPacketDatabase) ResetStatus(id primitive.ObjectID) error {
+	_, err := this.db.UpdateByID(this.ctx, id, bson.M{
+		"$set": bson.M{
+			"status": schema.FuzzStatusTodo,
+			"logDir": "",
+		},
+	})
+	return err
 }
 
 func (this *ParsedPacketDatabase) UpdateParsedPacketScore(id primitive.ObjectID, newScore float64) error {

@@ -7,10 +7,10 @@ import SQLiTimeBased from './poc/sqli-timebased';
 import * as Bluebird from 'bluebird';
 import { sleep } from 'libs/helper';
 import * as fs from 'fs/promises';
-import ReflectedXSS from './poc/reflected-xss';
 import RCEInputNoSanitize from './poc/rce-input-no-sanitize';
 import FileInclusionPathTraverse from './poc/fileIncludePathTraverse';
 import AutoArjun from './poc/auto-arjun';
+import HtmlInjection from './poc/html-injection';
 
 export default class ApiFuzzerSender {
   options: BotFuzzer;
@@ -23,7 +23,7 @@ export default class ApiFuzzerSender {
       // new ExpressFastifyOpenRedirect(options, packet),
       // new FastifyDOSCVE202122964(options, packet),
       // new SQLiTimeBased(options, packet),
-      // new ReflectedXSS(options, packet),
+      new HtmlInjection(options, packet),
       new RCEInputNoSanitize(options, packet),
       // new FileInclusionPathTraverse(options, packet),
       // new AutoArjun(options, packet),

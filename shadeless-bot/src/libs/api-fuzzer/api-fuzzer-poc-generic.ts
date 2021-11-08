@@ -23,10 +23,10 @@ import { ParsedPacket } from 'libs/databases/parsedPacket.database';
 import * as qs from 'qs';
 export interface ApiFuzzer {
   logDir: string;
+  logger: ShadelessLogger;
 
   condition?: () => Promise<boolean>;
   poc: () => Promise<any>;
-  detect: (resp: any) => Promise<number>;
 }
 
 export type MyAxiosResponse = AxiosResponse & { timetook: number };
@@ -58,9 +58,11 @@ export default class ApiFuzzerPocGeneric {
     rootObj: any,
     obj: any,
     payload: string,
+    reflectedParameters?: Record<string, string>,
   ) {
     for (const key of Object.keys(obj)) {
       if (isString(obj[key]) || isNumber(obj[key])) {
+        if (reflectedParameters && !(key in reflectedParameters)) continue;
         const tmp = obj[key];
         obj[key] = payload;
         this.resultObjPayload.push(rootObj);
@@ -72,8 +74,17 @@ export default class ApiFuzzerPocGeneric {
     }
   }
 
-  substitutePayloadToObj(obj: any, payload: string): any[] {
-    this.recursiveSubstitutePayloadToObj(obj, obj, payload);
+  substitutePayloadToObj(
+    obj: any,
+    payload: string,
+    reflectedParameters?: Record<string, string>,
+  ): any[] {
+    this.recursiveSubstitutePayloadToObj(
+      obj,
+      obj,
+      payload,
+      reflectedParameters,
+    );
     return this.resultObjPayload;
   }
 
@@ -83,6 +94,7 @@ export default class ApiFuzzerPocGeneric {
     const conf = new ConfigService().getConfig();
     const body = await fs.readFile(
       path.join(conf.bodyDir, packet.project, packet.requestBodyHash),
+      'utf-8',
     );
     const params = qs.parse(packet.querystring);
     return {
@@ -133,9 +145,14 @@ export default class ApiFuzzerPocGeneric {
   protected async sendAllQuerystringInValue(
     opt: AxiosRequestConfig<any>,
     payload: string,
+    reflectedParameters?: Record<string, string>,
   ): Promise<MyAxiosResponse[]> {
     const { params } = opt;
-    const listParamsWithPayload = this.substitutePayloadToObj(params, payload);
+    const listParamsWithPayload = this.substitutePayloadToObj(
+      params,
+      payload,
+      reflectedParameters,
+    );
     return Bluebird.map(listParamsWithPayload, async (params) => {
       const newOpt = Object.assign({}, opt);
       newOpt.params = params;
@@ -146,6 +163,7 @@ export default class ApiFuzzerPocGeneric {
   protected async sendAllBodyInValue(
     opt: AxiosRequestConfig<any>,
     payload: string,
+    reflectedParameters?: Record<string, string>,
   ): Promise<MyAxiosResponse[]> {
     const contentType = opt.headers['Content-Type'];
     if (!contentType) return [];
@@ -156,7 +174,11 @@ export default class ApiFuzzerPocGeneric {
     if (contentType.includes('x-www-form-urlencoded')) {
       body = Object.assign({}, qs.parse(opt.data));
     }
-    const listParamsWithPayload = this.substitutePayloadToObj(body, payload);
+    const listParamsWithPayload = this.substitutePayloadToObj(
+      body,
+      payload,
+      reflectedParameters,
+    );
     return Bluebird.map(listParamsWithPayload, async (data) => {
       const newOpt = Object.assign({}, opt);
       newOpt.data = data;
@@ -167,6 +189,7 @@ export default class ApiFuzzerPocGeneric {
   protected async sendAllQuerystringInValueWordlist(
     opt: AxiosRequestConfig<any>,
     wordlist: string[],
+    reflectedParameters?: Record<string, string>,
   ): Promise<MyAxiosResponse[]> {
     let cnt = 0;
     let result: MyAxiosResponse[] = [];
@@ -178,7 +201,11 @@ export default class ApiFuzzerPocGeneric {
         if (cnt % 30 === 0) {
           this.logger.log(`Done ${cnt}/${wordlist.length}: ${word}`);
         }
-        const resps = await this.sendAllQuerystringInValue(opt, word);
+        const resps = await this.sendAllQuerystringInValue(
+          opt,
+          word,
+          reflectedParameters,
+        );
         result = [...result, ...resps];
       },
       { concurrency: this.options.asyncRequest },
@@ -189,6 +216,7 @@ export default class ApiFuzzerPocGeneric {
   protected async sendAllBodyInValueWordlist(
     opt: AxiosRequestConfig<any>,
     wordlist: string[],
+    reflectedParameters?: Record<string, string>,
   ): Promise<MyAxiosResponse[]> {
     let cnt = 0;
     let result: MyAxiosResponse[] = [];
@@ -200,11 +228,19 @@ export default class ApiFuzzerPocGeneric {
         if (cnt % 30 === 0) {
           this.logger.log(`Done ${cnt}/${wordlist.length}: ${word}`);
         }
-        const resps = await this.sendAllBodyInValue(opt, word);
+        const resps = await this.sendAllBodyInValue(
+          opt,
+          word,
+          reflectedParameters,
+        );
         result = [...result, ...resps];
       },
       { concurrency: this.options.asyncRequest },
     );
     return result;
+  }
+
+  isEtcPasswd(s: string): boolean {
+    return s.includes('root:x:0:0:root:/root');
   }
 }

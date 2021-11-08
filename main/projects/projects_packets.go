@@ -65,9 +65,11 @@ func putFuzzingPacketStatus(c *gin.Context) {
 		return
 	}
 	pathDelete := path.Join("../shadeless-bot/", parsedPacket.LogDir, "..")
-	if err := os.RemoveAll(pathDelete); err != nil {
-		responser.ResponseError(c, err)
-		return
+	if strings.Contains(pathDelete, "shadeless-bot") {
+		if err := os.RemoveAll(pathDelete); err != nil {
+			responser.ResponseError(c, err)
+			return
+		}
 	}
 
 	if err := parsedPacketDb.ResetStatus(id); err != nil {

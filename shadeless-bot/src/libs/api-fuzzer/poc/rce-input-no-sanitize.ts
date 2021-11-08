@@ -81,6 +81,7 @@ export default class RCEInputNoSanitize
     );
     const responses = [...resBody, ...resQs];
     for (let i = 0; i < responses.length; i++) {
+      if (responses[i] === null) continue;
       if (this.isEtcPasswd(responses[i].data as string)) {
         return 1;
       }
