@@ -1,5 +1,4 @@
 import ApiFuzzerPocGeneric, { ApiFuzzer } from '../api-fuzzer-poc-generic';
-import { AxiosResponse } from 'axios';
 import { BotFuzzer } from 'libs/databases/botFuzzer.database';
 import { ParsedPacket } from 'libs/databases/parsedPacket.database';
 
@@ -24,14 +23,7 @@ export default class FastifyDOSCVE202122964
     opt.url = rememberUrl; // Resend this
     const res2 = await this.sendOneRequest(opt);
 
-    return [res1, res2];
-  }
-
-  async detect(res: AxiosResponse) {
-    this.logger.setPrefix('FastifyDOSCVE202122964');
-    this.logger.log('Running');
-    const res1 = res[0];
-    const res2 = res[0];
+    // Detect
     if (res1 === null && res2 === null) {
       this.logger.log('Detected');
       return 1;

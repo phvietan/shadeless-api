@@ -10,39 +10,39 @@ import * as fs from 'fs';
 
 const fSleep = fs
   .readFileSync(
-    path.join(
-      new ConfigService().getConfig().wordlistDir,
-      'sqli_timebased.txt',
-    ),
+    path.join(new ConfigService().getConfig().wordlistDir, 'rce_timebased.txt'),
     'utf-8',
   )
   .trim();
 const wordlistSleep = fSleep.split('\n');
 
-export default class SQLiTimeBased
+const fRceEtcPasswd = fs
+  .readFileSync(
+    path.join(new ConfigService().getConfig().wordlistDir, 'rce_etcpasswd.txt'),
+    'utf-8',
+  )
+  .trim();
+const wordlistEtcPasswd = fRceEtcPasswd.split('\n');
+
+export default class RCEInputNoSanitize
   extends ApiFuzzerPocGeneric
   implements ApiFuzzer
 {
   constructor(botFuzzer: BotFuzzer, packet: ParsedPacket) {
-    super(botFuzzer, packet, SQLiTimeBased.name);
+    super(botFuzzer, packet, RCEInputNoSanitize.name);
   }
 
-  async poc() {
+  async pocTimebased() {
     const opt = await this.getAxiosOptionsFromPacket(this.packet);
     const resBody = await this.sendAllBodyInValueWordlist(opt, wordlistSleep);
     const resQs = await this.sendAllQuerystringInValueWordlist(
       opt,
       wordlistSleep,
     );
-    return [...resBody, ...resQs];
-  }
-
-  async detect(res: MyAxiosResponse[]) {
-    this.logger.setPrefix('RCE-timebased:');
-    this.logger.log('Running');
+    const responses = [...resBody, ...resQs];
     let cntOver4000 = 0;
     let cntNull = 0;
-    res.forEach((r) => {
+    responses.forEach((r) => {
       if (r === null) cntNull += 1;
       else {
         if (r.timetook >= 4000) {
@@ -67,5 +67,30 @@ export default class SQLiTimeBased
       this.logger.log('Not detected');
     }
     return 0;
+  }
+
+  async pocCatEtcPasswd() {
+    const opt = await this.getAxiosOptionsFromPacket(this.packet);
+    const resBody = await this.sendAllBodyInValueWordlist(
+      opt,
+      wordlistEtcPasswd,
+    );
+    const resQs = await this.sendAllQuerystringInValueWordlist(
+      opt,
+      wordlistEtcPasswd,
+    );
+    const responses = [...resBody, ...resQs];
+    for (let i = 0; i < responses.length; i++) {
+      if (this.isEtcPasswd(responses[i].data as string)) {
+        return 1;
+      }
+    }
+    return 0;
+  }
+
+  async poc() {
+    const poc1 = await this.pocCatEtcPasswd();
+    if (poc1 === 1) return 1;
+    return this.pocTimebased();
   }
 }

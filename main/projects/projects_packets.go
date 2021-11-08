@@ -3,6 +3,8 @@ package projects
 import (
 	"errors"
 	"fmt"
+	"os"
+	"path"
 	"shadeless-api/main/libs/database"
 	"shadeless-api/main/libs/responser"
 	"strconv"
@@ -22,6 +24,7 @@ func PacketsRoutes(route *gin.Engine) {
 		projects.GET("/fuzzing_packets/api", getFuzzingPacketsApi)
 		projects.GET("/fuzzing_packets/static", getFuzzingPacketsStatic)
 		projects.PUT("/fuzzing_packets/:id/score", putFuzzingPacketScore)
+		projects.PUT("/fuzzing_packets/:id/reset", putFuzzingPacketStatus)
 	}
 }
 
@@ -47,6 +50,31 @@ func putFuzzingPacketScore(c *gin.Context) {
 		return
 	}
 	responser.ResponseOk(c, "Successfully update score")
+}
+
+func putFuzzingPacketStatus(c *gin.Context) {
+	id, err := primitive.ObjectIDFromHex(c.Param("id"))
+	if err != nil {
+		responser.ResponseError(c, err)
+		return
+	}
+	var parsedPacketDb database.IParsedPacketDatabase = new(database.ParsedPacketDatabase).Init()
+	parsedPacket, err := parsedPacketDb.GetOneById(id)
+	if err != nil {
+		responser.ResponseError(c, err)
+		return
+	}
+	pathDelete := path.Join("../shadeless-bot/", parsedPacket.LogDir, "..")
+	if err := os.RemoveAll(pathDelete); err != nil {
+		responser.ResponseError(c, err)
+		return
+	}
+
+	if err := parsedPacketDb.ResetStatus(id); err != nil {
+		responser.ResponseError(c, err)
+		return
+	}
+	responser.ResponseOk(c, "Successfully reset status for this api")
 }
 
 func getProjectByName(c *gin.Context) {
