@@ -42,22 +42,13 @@ func (this *StaticScorer) GetScore() float64 {
 	if libs.IsSliceIncludesString([]string{"jpeg", "jpg", "png", "js", "css", "txt", "json", "gif", "xml", "woff2", "woff", "ttf", "docx", "m3u8", "ts", "webp", "ico", "svg"}, extension) {
 		score += 40
 	}
-	// .gif is dirty way for many vendor that collect user's data, so just worth 10 points
+	// .gif is dirty way for many vendor that collect user's data
 	if extension == "gif" {
 		score += 30
 	}
 	// If no param, should we fuzz?
 	if len(p.Parameters) == 0 {
 		score += 30
-	} else {
-		// Sometimes website includes timestamp for removing cache
-		if len(p.Parameters) == 1 && p.Querystring != "" {
-			score += 30
-		} else {
-			if len(p.Parameters) > 4 { // Has many params? maybe it is api
-				score -= 20
-			}
-		}
 	}
 
 	// CDN Origins
