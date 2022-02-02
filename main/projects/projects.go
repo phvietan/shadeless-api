@@ -29,8 +29,6 @@ func Routes(route *gin.Engine) {
 	PathsRoutes(route)
 	NotesRoutes(route)
 	UsersRoutes(route)
-	BotPathRoutes(route)
-	BotFuzzerRoutes(route)
 }
 
 func getProjects(c *gin.Context) {
@@ -64,18 +62,6 @@ func postProjects(c *gin.Context) {
 
 	var projectDb database.IProjectDatabase = new(database.ProjectDatabase).Init()
 	if err := projectDb.Insert(project); err != nil {
-		responser.ResponseError(c, err)
-		return
-	}
-
-	var botPathDb database.IBotPathDatabase = new(database.BotPathDatabase).Init()
-	if err := botPathDb.Insert(schema.NewBotPath(project.Name)); err != nil {
-		responser.ResponseError(c, err)
-		return
-	}
-
-	var botFuzzerDb database.IBotFuzzerDatabase = new(database.BotFuzzerDatabase).Init()
-	if err := botFuzzerDb.Insert(schema.NewBotFuzzer(project.Name)); err != nil {
 		responser.ResponseError(c, err)
 		return
 	}
@@ -147,8 +133,6 @@ func putProject(c *gin.Context) {
 		listDbs = append(listDbs, new(database.ParsedPacketDatabase).Init())
 		listDbs = append(listDbs, new(database.ParsedPathDatabase).Init())
 		listDbs = append(listDbs, new(database.FileDatabase).Init())
-		listDbs = append(listDbs, new(database.BotPathDatabase).Init())
-		listDbs = append(listDbs, new(database.BotFuzzerDatabase).Init())
 		for _, d := range listDbs {
 			if err := d.UpdateOneProperty("project", dbProject.Name, newProject.Name); err != nil {
 				responser.ResponseError(c, err)
@@ -203,8 +187,6 @@ func deleteProjects(c *gin.Context) {
 		listDbs = append(listDbs, new(database.ParsedPacketDatabase).Init())
 		listDbs = append(listDbs, new(database.ParsedPathDatabase).Init())
 		listDbs = append(listDbs, new(database.FileDatabase).Init())
-		listDbs = append(listDbs, new(database.BotPathDatabase).Init())
-		listDbs = append(listDbs, new(database.BotFuzzerDatabase).Init())
 		for _, d := range listDbs {
 			if err := d.DeleteByOneProperty("project", project.Name); err != nil {
 				responser.ResponseError(c, err)
