@@ -145,9 +145,8 @@ func (this *ParsedPacketDatabase) Upsert(packet *schema.ParsedPacket) error {
 		fmt.Println("Not found parse packet, creating one")
 		return this.Insert(packet)
 	}
-	// If found, then update. However, other properties like status, result, static_score should not be updated
+	// If found, then update. However, other properties like status, static_score should not be updated
 	packet.Status = result.Status
-	packet.Result = result.Result
 	packet.StaticScore = result.StaticScore
 	_, err := this.db.UpdateByID(this.ctx, result.ID, bson.M{
 		"$set": packet,

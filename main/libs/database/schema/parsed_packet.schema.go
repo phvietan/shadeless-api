@@ -32,11 +32,10 @@ type ParsedPacket struct {
 	Parameters         []string `json:"parameters"`
 	RequestHeaders     []string `json:"requestHeaders" bson:"requestHeaders"`
 
-	Hash        string   `json:"hash" bson:"hash"`
-	Status      string   `json:"status" bson:"status"`
-	Result      []string `json:"result" bson:"result"`
-	StaticScore float64  `json:"staticScore" bson:"staticScore"`
-	LogDir      string   `json:"logDir" bson:"logDir"`
+	Hash        string  `json:"hash" bson:"hash"`
+	Status      string  `json:"status" bson:"status"`
+	StaticScore float64 `json:"staticScore" bson:"staticScore"`
+	LogDir      string  `json:"logDir" bson:"logDir"`
 
 	ResponseStatus           int               `json:"responseStatus" bson:"responseStatus"`
 	ResponseContentType      string            `json:"responseContentType" bson:"responseContentType"`
@@ -76,7 +75,7 @@ func (this *ParsedPacket) ParseFromPacket(packet *Packet) (*ParsedPacket, error)
 	if err := json.Unmarshal(bytesPacket, result); err != nil {
 		return nil, err
 	}
-	result.Result = []string{}
+	result.RequestHeaders = result.RequestHeaders[1:]
 	result.Status = fuzzTodo
 	result.Hash = CalculatePacketHash(result.Method, result.ResponseStatus, result.Origin, result.Path, result.Parameters)
 	result.setStaticScore()
