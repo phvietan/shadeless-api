@@ -59,8 +59,10 @@ func insertToDb(packet *schema.Packet, parsedPacket *schema.ParsedPacket) error 
 
 	// Parsed packet
 	var parsedPacketDb database.IParsedPacketDatabase = new(database.ParsedPacketDatabase).Init()
-	if errParsedPacket = parsedPacketDb.Upsert(parsedPacket); errParsedPacket != nil {
-		fmt.Println("Error: ", errParsedPacket)
+	if parsedPacket.Path != "/li/track" {
+		if errParsedPacket = parsedPacketDb.Upsert(parsedPacket); errParsedPacket != nil {
+			fmt.Println("Error: ", errParsedPacket)
+		}
 	}
 
 	// Parsed path
