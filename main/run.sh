@@ -7,9 +7,4 @@ then
   go get github.com/cespare/reflex
 fi
 
-cd ..
-sudo docker-compose stop
-sudo docker-compose up -d --build
-cd main
-
 reflex -s -R vendor. -r \.go$ -- bash start.sh

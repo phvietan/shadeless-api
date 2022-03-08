@@ -2,3 +2,4 @@ db
 files
 main/main
 main/cov
+.env

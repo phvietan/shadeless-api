@@ -19,7 +19,6 @@ func spawnApp() *gin.Engine {
 	router.Static("/files", "../files")
 	router.Use(setHeaderForApi())
 	router.Use(handleOptionsMethod())
-	router.Static("/logs", "../shadeless-bot/logs")
 
 	router.GET("/healthcheck", healthCheckHandler)
 
@@ -30,5 +29,5 @@ func spawnApp() *gin.Engine {
 
 func main() {
 	router := spawnApp()
-	router.Run(config.GetInstance().GetBindAddress()) // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
+	router.Run(config.GetInstance().GetBindAddress())
 }
